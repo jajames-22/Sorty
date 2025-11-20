@@ -288,7 +288,7 @@
         android:id="@+id/button_continue"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="16dp"
         android:backgroundTint="#FFA500"
         android:fontFamily="@font/poppins"
         android:padding="12dp"
