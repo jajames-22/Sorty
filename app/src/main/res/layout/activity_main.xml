@@ -22,7 +22,7 @@
         <ImageView
             android:id="@+id/imageView"
             android:layout_width="84dp"
-            android:layout_height="78dp"
+            android:layout_height="83dp"
             app:srcCompat="@drawable/sorty_logo" />
 
         <TextView
