@@ -2,47 +2,26 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/primary_green"
-    android:padding="24dp"
-    tools:context=".CreateAccountActivity">
-
-    <LinearLayout
-        android:id="@+id/back_container"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:contentDescription="Go Back"
-            android:src="@drawable/back"
-            android:tint="@android:color/white" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:fontFamily="@font/poppins"
-            android:text="Go Back"
-            android:textColor="@android:color/white"
-            android:textSize="15sp" />
-    </LinearLayout>
+    android:backgroundTint="@color/primary_green"
+    tools:context=".CreateAccount">
 
     <LinearLayout
         android:id="@+id/logo_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/back_container">
+        app:layout_constraintTop_toBottomOf="@+id/backbtn">
 
         <ImageView
             android:layout_width="35dp"
@@ -54,37 +33,43 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:fontFamily="@font/poppins"
+            android:fontFamily="@font/poppins_bold"
             android:text="Sorty"
             android:textColor="@android:color/white"
             android:textSize="22sp"
             android:textStyle="bold" />
+
     </LinearLayout>
 
     <TextView
         android:id="@+id/title_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
         android:layout_marginTop="1dp"
-        android:fontFamily="@font/poppins"
+        android:layout_marginEnd="24dp"
+        android:fontFamily="@font/poppins_bold"
         android:text="Create Account"
         android:textColor="@android:color/white"
         android:textSize="35sp"
         android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/logo_container" />
 
     <TextView
         android:id="@+id/your_info_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="5dp"
+        android:layout_width="0dp"
+        android:layout_height="38dp"
+        android:layout_marginStart="24dp"
         android:layout_marginTop="2dp"
+        android:layout_marginEnd="24dp"
         android:fontFamily="@font/poppins"
         android:text="Your Info"
         android:textColor="@android:color/white"
         android:textSize="18sp"
         android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/title_text" />
 
@@ -93,18 +78,22 @@
         style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:layout_marginEnd="1dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
         android:layout_marginBottom="12dp"
         app:boxBackgroundColor="#E0E0E0"
         app:boxCornerRadiusBottomEnd="30dp"
         app:boxCornerRadiusBottomStart="30dp"
         app:boxCornerRadiusTopEnd="30dp"
         app:boxCornerRadiusTopStart="30dp"
+        app:boxStrokeColor="@color/transparent"
         app:boxStrokeWidth="0dp"
+        app:cursorColor="@color/grey"
         app:hintEnabled="false"
         app:layout_constraintBottom_toTopOf="@+id/input_last_name"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/your_info_title">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -113,9 +102,14 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins"
             android:hint="First Name"
+            android:includeFontPadding="false"
             android:inputType="textPersonName"
             android:padding="13dp"
+            android:selectAllOnFocus="false"
             android:textColor="@android:color/black"
+            android:textColorHighlight="@color/transparent"
+            android:textColorHint="@color/grey"
+            android:textIsSelectable="false"
             android:textSize="15sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -124,8 +118,9 @@
         style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:layout_marginEnd="1dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
         app:boxBackgroundColor="#E0E0E0"
         app:boxCornerRadiusBottomEnd="30dp"
         app:boxCornerRadiusBottomStart="30dp"
@@ -134,6 +129,9 @@
         app:boxStrokeWidth="0dp"
         app:hintEnabled="false"
         app:layout_constraintEnd_toEndOf="parent"
+        app:cursorColor="@color/grey"
+        app:boxStrokeColor="@color/transparent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/input_first_name">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -142,9 +140,11 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins"
             android:hint="Last Name"
+            android:includeFontPadding="false"
             android:inputType="textPersonName"
             android:padding="13dp"
             android:textColor="@android:color/black"
+            android:textColorHint="@color/grey"
             android:textSize="15sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -153,8 +153,9 @@
         style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:layout_marginEnd="1dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
         app:boxBackgroundColor="#E0E0E0"
         app:boxCornerRadiusBottomEnd="30dp"
         app:boxCornerRadiusBottomStart="30dp"
@@ -163,6 +164,9 @@
         app:boxStrokeWidth="0dp"
         app:hintEnabled="false"
         app:layout_constraintEnd_toEndOf="parent"
+        app:cursorColor="@color/grey"
+        app:boxStrokeColor="@color/transparent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/input_last_name">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -171,6 +175,8 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins"
             android:hint="Date of Birth"
+            android:includeFontPadding="false"
+            android:textColorHint="@color/grey"
             android:inputType="date"
             android:padding="13dp"
             android:textColor="@android:color/black"
@@ -179,10 +185,11 @@
 
     <TextView
         android:id="@+id/account_credentials_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="5dp"
+        android:layout_width="0dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="24dp"
         android:layout_marginTop="20dp"
+        android:layout_marginEnd="24dp"
         android:layout_marginBottom="15dp"
         android:fontFamily="@font/poppins"
         android:text="Account Credentials"
@@ -190,6 +197,7 @@
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/input_email"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/input_dob" />
 
@@ -198,8 +206,9 @@
         style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:layout_marginEnd="1dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
         app:boxBackgroundColor="#E0E0E0"
         app:boxCornerRadiusBottomEnd="30dp"
         app:boxCornerRadiusBottomStart="30dp"
@@ -207,7 +216,10 @@
         app:boxCornerRadiusTopStart="30dp"
         app:boxStrokeWidth="0dp"
         app:hintEnabled="false"
+        app:cursorColor="@color/grey"
         app:layout_constraintEnd_toEndOf="parent"
+        app:boxStrokeColor="@color/transparent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/account_credentials_title">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -216,6 +228,8 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins"
             android:hint="Email"
+            android:includeFontPadding="false"
+            android:textColorHint="@color/grey"
             android:inputType="textEmailAddress"
             android:padding="13dp"
             android:textColor="@android:color/black"
@@ -227,8 +241,9 @@
         style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:layout_marginEnd="1dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
         app:boxBackgroundColor="#E0E0E0"
         app:boxCornerRadiusBottomEnd="30dp"
         app:boxCornerRadiusBottomStart="30dp"
@@ -237,8 +252,11 @@
         app:boxStrokeWidth="0dp"
         app:hintEnabled="false"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/input_email"
         app:passwordToggleEnabled="true"
+        app:boxStrokeColor="@color/transparent"
+        app:cursorColor="@color/grey"
         app:passwordToggleTint="@android:color/darker_gray">
 
         <com.google.android.material.textfield.TextInputEditText
@@ -247,6 +265,8 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins"
             android:hint="Password"
+            android:includeFontPadding="false"
+            android:textColorHint="@color/grey"
             android:inputType="textPassword"
             android:padding="13dp"
             android:textColor="@android:color/black"
@@ -258,8 +278,9 @@
         style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:layout_marginEnd="1dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
         app:boxBackgroundColor="#E0E0E0"
         app:boxCornerRadiusBottomEnd="30dp"
         app:boxCornerRadiusBottomStart="30dp"
@@ -268,6 +289,9 @@
         app:boxStrokeWidth="0dp"
         app:hintEnabled="false"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:cursorColor="@color/grey"
+        app:boxStrokeColor="@color/transparent"
         app:layout_constraintTop_toBottomOf="@id/input_password"
         app:passwordToggleEnabled="true"
         app:passwordToggleTint="@android:color/darker_gray">
@@ -278,7 +302,9 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins"
             android:hint="Confirm Password"
+            android:includeFontPadding="false"
             android:inputType="textPassword"
+            android:textColorHint="@color/grey"
             android:padding="13dp"
             android:textColor="@android:color/black"
             android:textSize="15sp" />
@@ -288,9 +314,11 @@
         android:id="@+id/button_continue"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
         android:backgroundTint="#FFA500"
-        android:fontFamily="@font/poppins"
+        android:fontFamily="@font/poppins_bold"
         android:padding="12dp"
         android:paddingVertical="16dp"
         android:paddingStart="12dp"
@@ -306,9 +334,21 @@
         android:textStyle="bold"
         app:cornerRadius="30dp"
         app:iconPadding="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/input_confirm_password" />
+
+    <ImageButton
+        android:id="@+id/backbtn"
+        android:layout_width="24dp"
+        android:layout_height="37dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="24dp"
+        android:backgroundTint="#2C4D34"
+        android:scaleType="center"
+        android:src="@drawable/baseline_arrow_back_24"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

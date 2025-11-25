@@ -10,41 +10,35 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.sorty.databinding.ActivityMainBinding
+// Import the correct binding class
+import com.example.sorty.databinding.ActivityCreateAccountBinding
 
-
-
-class MainActivity : AppCompatActivity() {
-
-    private lateinit var bind: ActivityMainBinding
+class CreateAccount : AppCompatActivity() {
+    // Declare the correct binding class
+    private lateinit var bind: ActivityCreateAccountBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        bind = ActivityMainBinding.inflate(layoutInflater)
+        // Inflate the correct binding class
+        bind = ActivityCreateAccountBinding.inflate(layoutInflater)
         setContentView(bind.root)
         setStatusBarIconsLight(window, false)
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(bind.root.id)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(bind.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
         supportActionBar?.hide()
-        val createacc = bind.createAcc
 
-        createacc.setOnClickListener {
-            // This is the correct way to specify which Activity to start:
-            val intent = Intent(this, CreateAccount::class.java)
+        val backbtn = bind.backbtn
 
-            // Start the new Activity:
-            startActivity(intent)
+        backbtn.setOnClickListener {
+            finish()
         }
-
-
     }
 
-    //dont be bothered with this. Function lang ito para maging white ang status bar for this specif screen only hehe
     private fun setStatusBarIconsLight(window: Window, isLight: Boolean) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             // --- Modern approach for API 30 (R / Android 11) and above ---
