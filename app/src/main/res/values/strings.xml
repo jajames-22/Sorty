@@ -10,4 +10,10 @@
     <string name="subtitle">Your organizer assistant!</string>
     <string name="login_text">Login</string>
     <string name="don_t_have_an_account_yet">Don\'t have an account yet?</string>
+    <string name="account_credentials">Account Credentials</string>
+    <string name="your_info">Your Info</string>
+    <string name="title_activity_home">Home</string>
+    <string name="title_home">Home</string>
+    <string name="title_subjects">Subjects</string>
+    <string name="title_account">Account</string>
 </resources>

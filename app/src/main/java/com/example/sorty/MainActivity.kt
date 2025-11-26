@@ -32,6 +32,7 @@ class MainActivity : AppCompatActivity() {
         }
         supportActionBar?.hide()
         val createacc = bind.createAcc
+        val loginBtn = bind.loginBtn
 
         createacc.setOnClickListener {
             // This is the correct way to specify which Activity to start:
@@ -40,6 +41,12 @@ class MainActivity : AppCompatActivity() {
             // Start the new Activity:
             startActivity(intent)
         }
+
+        loginBtn.setOnClickListener {
+            val intent = Intent(this, Home::class.java)
+            startActivity(intent)
+        }
+
 
 
     }
