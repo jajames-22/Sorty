@@ -4,13 +4,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-// 1. Change the import to match the fragment's layout file name
 import com.example.sorty.databinding.FragmentSubjectsBinding
 
-class SubjectsFragment : Fragment() {
+class SubjectsFragment : Fragment(), AddNewSubject.AddNewSubjectListener {
 
-    // 2. Change the type of the binding variable
     private lateinit var bind: FragmentSubjectsBinding
 
     override fun onCreateView(
@@ -18,11 +17,35 @@ class SubjectsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // 3. Inflate using the correct binding class
         bind = FragmentSubjectsBinding.inflate(inflater, container, false)
-
-        // You can now access your views directly using bind.
-        // For example: bind.yourTextView.text = "My Subjects"
         return bind.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val addSubjectBtn = bind.addSubjectBtn
+
+        addSubjectBtn.setOnClickListener {
+            showAddNewSubjectSheet()
+        }
+    }
+
+    private fun showAddNewSubjectSheet() {
+        val bottomSheet = AddNewSubject()
+        bottomSheet.setAddNewSubjectListener(this)
+        bottomSheet.show(parentFragmentManager, "AddNewSubjectBottomSheetTag")
+    }
+
+    /**
+     * FIXED: Added 'colorHex' parameter to match the interface change
+     */
+    override fun onSubjectAdded(subjectName: String, colorHex: String) {
+        // You can now use the colorHex here (e.g., to save to database)
+        Toast.makeText(
+            requireContext(),
+            "Subject: $subjectName, Color: $colorHex",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 }

@@ -148,6 +148,31 @@
             android:textSize="15sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <EditText
+        android:id="@+id/edit_bday"
+        style="@style/RoundedEditTextStyle"
+        android:layout_width="0dp"
+        android:layout_height="49dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
+        android:backgroundTint="#D9D9D9"
+        android:clickable="true"
+        android:drawableEnd="@drawable/baseline_calendar_month"
+        android:drawableTint="@color/dark_grey"
+        android:focusable="false"
+        android:fontFamily="@font/poppins"
+        android:hint="Date of Birth (DD/MM/YYYY)"
+        android:includeFontPadding="false"
+        android:inputType="none"
+        android:textAlignment="textStart"
+        android:textColor="@color/primary_green"
+        android:textColorHint="@color/dark_grey"
+        android:textSize="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/input_last_name" />
+
     <TextView
         android:id="@+id/account_credentials_title"
         android:layout_width="0dp"
@@ -160,7 +185,7 @@
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dob" />
+        app:layout_constraintTop_toBottomOf="@+id/edit_bday" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/input_email"
@@ -218,18 +243,18 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/input_email"
-        app:passwordToggleEnabled="true"
         app:passwordToggleTint="@android:color/darker_gray">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/edit_password"
+            android:id="@+id/edit_school"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins"
-            android:hint="Password"
+            android:hint="School"
             android:includeFontPadding="false"
             android:inputType="textPassword"
             android:padding="13dp"
+            android:password="false"
             android:textColor="@android:color/black"
             android:textColorHint="@color/dark_grey"
             android:textSize="15sp" />
@@ -255,15 +280,15 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/input_password"
-        app:passwordToggleEnabled="true"
+
         app:passwordToggleTint="@android:color/darker_gray">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/edit_confirm_password"
+            android:id="@+id/edit_course"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins"
-            android:hint="Confirm Password"
+            android:hint="Course"
             android:includeFontPadding="false"
             android:inputType="textPassword"
             android:padding="13dp"
@@ -312,25 +337,5 @@
         android:src="@drawable/baseline_arrow_back_24"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <EditText
-        android:id="@+id/dob"
-        style="@style/RoundedEditTextStyle"
-        android:layout_width="0dp"
-        android:layout_height="49dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="24dp"
-        android:backgroundTint="#D9D9D9"
-        android:fontFamily="@font/poppins"
-        android:hint="Date of Birth"
-        android:includeFontPadding="false"
-        android:textAlignment="textStart"
-        android:textColor="@color/primary_green"
-        android:textColorHint="@color/dark_grey"
-        android:textSize="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/input_last_name" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

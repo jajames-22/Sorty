@@ -55,17 +55,13 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.hide()
 
         val createacc = bind.createAcc
-        val loginBtn = bind.loginBtn
 
         createacc.setOnClickListener {
             val intent = Intent(this, CreateAccount::class.java)
             startActivity(intent)
         }
 
-        loginBtn.setOnClickListener {
-            val intent = Intent(this, Home::class.java)
-            startActivity(intent)
-        }
+
     }
 
     /**

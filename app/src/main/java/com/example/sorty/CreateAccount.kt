@@ -12,13 +12,22 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 // Import the correct binding class
 import com.example.sorty.databinding.ActivityCreateAccountBinding
+// --- DATE PICKER IMPORTS ---
+import android.app.DatePickerDialog
+import java.text.SimpleDateFormat
+import java.util.*
 
 class CreateAccount : AppCompatActivity() {
     // Declare the correct binding class
     private lateinit var bind: ActivityCreateAccountBinding
+
+    // --- DATE PICKER PROPERTY ---
+    // Member variable to keep track of the selected date (initializes to today)
+    private val calendar = Calendar.getInstance()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //enableEdgeToEdge()
+        enableEdgeToEdge()
 
         // Inflate the correct binding class
         bind = ActivityCreateAccountBinding.inflate(layoutInflater)
@@ -33,10 +42,69 @@ class CreateAccount : AppCompatActivity() {
         supportActionBar?.hide()
 
         val backbtn = bind.backbtn
+        val continuebtn =  bind.buttonContinue
 
         backbtn.setOnClickListener {
             finish()
         }
+
+        continuebtn.setOnClickListener {
+            val intent = Intent(this, Home::class.java)
+            startActivity(intent)
+        }
+
+        // --- DATE PICKER INTEGRATION START ---
+        // Set the click listener on the Date of Birth EditText (bind.dob)
+        bind.dob.setOnClickListener {
+            showDatePickerDialog()
+        }
+        // --- DATE PICKER INTEGRATION END ---
+    }
+
+    /**
+     * Shows the DatePickerDialog and handles date selection.
+     */
+    private fun showDatePickerDialog() {
+
+        // Define the callback function for when a user selects a date
+        val dateSetListener = DatePickerDialog.OnDateSetListener { _, year, monthOfYear, dayOfMonth ->
+
+            // Update the local Calendar instance with the chosen date
+            calendar.set(Calendar.YEAR, year)
+            calendar.set(Calendar.MONTH, monthOfYear)
+            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+
+            // Update the EditText field with the formatted date
+            updateLabel()
+        }
+
+        // Create and show the DatePickerDialog, initializing it with the current date
+        val datePicker = DatePickerDialog(
+            this,
+            dateSetListener,
+
+            // Initial year, month, and day to display in the dialog
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+
+        // Set the maximum date to today so users cannot pick a future date of birth
+        datePicker.datePicker.maxDate = System.currentTimeMillis()
+
+        datePicker.show()
+    }
+
+    /**
+     * Formats the selected date and sets it as the text in the EditText (bind.dob).
+     */
+    private fun updateLabel() {
+        // Use a consistent and readable date format
+        val dateFormat = "dd/MM/yyyy"
+        val simpleDateFormat = SimpleDateFormat(dateFormat, Locale.US)
+
+        // Apply the format to the calendar time and set the text
+        bind.dob.setText(simpleDateFormat.format(calendar.time))
     }
 
     private fun setStatusBarIconsLight(window: Window, isLight: Boolean) {
