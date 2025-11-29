@@ -18,7 +18,7 @@ class CreateAccount : AppCompatActivity() {
     private lateinit var bind: ActivityCreateAccountBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        //enableEdgeToEdge()
 
         // Inflate the correct binding class
         bind = ActivityCreateAccountBinding.inflate(layoutInflater)

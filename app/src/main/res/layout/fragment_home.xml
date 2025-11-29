@@ -22,11 +22,11 @@
 
     <TextView
         android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="230dp"
+        android:layout_height="28dp"
         android:layout_marginStart="24dp"
         android:fontFamily="@font/poppins"
-        android:text="Here are your notes!"
+        android:text="Here are your TO-DO List!"
         android:textColor="@color/primary_green"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
