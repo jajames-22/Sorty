@@ -55,7 +55,7 @@ class CreateAccount : AppCompatActivity() {
 
         // --- DATE PICKER INTEGRATION START ---
         // Set the click listener on the Date of Birth EditText (bind.dob)
-        bind.dob.setOnClickListener {
+        bind.editBday.setOnClickListener {
             showDatePickerDialog()
         }
         // --- DATE PICKER INTEGRATION END ---
@@ -104,7 +104,7 @@ class CreateAccount : AppCompatActivity() {
         val simpleDateFormat = SimpleDateFormat(dateFormat, Locale.US)
 
         // Apply the format to the calendar time and set the text
-        bind.dob.setText(simpleDateFormat.format(calendar.time))
+        bind.editBday.setText(simpleDateFormat.format(calendar.time))
     }
 
     private fun setStatusBarIconsLight(window: Window, isLight: Boolean) {
