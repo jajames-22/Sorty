@@ -4,7 +4,7 @@
     <selectionStates>
       <SelectionState runConfigName="MainActivity">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-11-29T00:44:18.872964600Z">
+        <DropdownSelection timestamp="2025-11-29T01:06:14.658412500Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\NITRO V\.android\avd\Pixel_7.avd" />
