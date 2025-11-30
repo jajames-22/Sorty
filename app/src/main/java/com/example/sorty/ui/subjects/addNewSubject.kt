@@ -46,11 +46,16 @@ class AddNewSubject : BottomSheetDialogFragment() {
         val folderIcon2 = bind.folderIcon2
 
         // 2. Setup Radio Buttons with Custom Selectors (Color + Border)
-        setupRadioButton(bind.radioColor1, "#FF8A80")
-        setupRadioButton(bind.radioColor2, "#B9F6CA")
-        setupRadioButton(bind.radioColor3, "#82B1FF")
-        setupRadioButton(bind.radioColor4, "#FFD180")
-        setupRadioButton(bind.radioColor5, "#EA80FC")
+        setupRadioButton(bind.radioColor1, "#FF8A80") // Red
+        setupRadioButton(bind.radioColor2, "#B9F6CA") // Green
+        setupRadioButton(bind.radioColor3, "#82B1FF") // Blue
+        setupRadioButton(bind.radioColor4, "#FFD180") // Orange
+        setupRadioButton(bind.radioColor5, "#EA80FC") // Purple
+
+        setupRadioButton(bind.radioColor6, "#80CBC4") // Teal
+        setupRadioButton(bind.radioColor7, "#E6EE9C") // Lime
+        setupRadioButton(bind.radioColor8, "#CFD8DC") // Blue Grey
+        setupRadioButton(bind.radioColor9, "#FFCCBC")
 
         // Helper function to update folder icons
         fun updateFolderColor(hex: String) {
@@ -71,6 +76,10 @@ class AddNewSubject : BottomSheetDialogFragment() {
                 R.id.radioColor3 -> "#82B1FF"
                 R.id.radioColor4 -> "#FFD180"
                 R.id.radioColor5 -> "#EA80FC"
+                R.id.radioColor6 -> "#80CBC4"
+                R.id.radioColor7 -> "#E6EE9C"
+                R.id.radioColor8 -> "#CFD8DC"
+                R.id.radioColor9 -> "#FFCCBC"
                 else -> "#FF8A80"
             }
             updateFolderColor(selectedColorHex)

@@ -106,7 +106,7 @@
             android:inputType="textPersonName"
             android:padding="13dp"
             android:selectAllOnFocus="false"
-            android:textColor="@android:color/black"
+            android:textColor="@color/primary_green"
             android:textColorHighlight="@color/transparent"
             android:textColorHint="@color/dark_grey"
             android:textIsSelectable="false"
@@ -143,7 +143,7 @@
             android:includeFontPadding="false"
             android:inputType="textPersonName"
             android:padding="13dp"
-            android:textColor="@android:color/black"
+            android:textColor="@color/primary_green"
             android:textColorHint="@color/dark_grey"
             android:textSize="15sp" />
     </com.google.android.material.textfield.TextInputLayout>
@@ -165,6 +165,7 @@
         android:hint="Date of Birth (DD/MM/YYYY)"
         android:includeFontPadding="false"
         android:inputType="none"
+        android:paddingLeft="15dp"
         android:textAlignment="textStart"
         android:textColor="@color/primary_green"
         android:textColorHint="@color/dark_grey"
@@ -217,7 +218,7 @@
             android:includeFontPadding="false"
             android:inputType="textEmailAddress"
             android:padding="13dp"
-            android:textColor="@android:color/black"
+            android:textColor="@color/primary_green"
             android:textColorHint="@color/dark_grey"
             android:textSize="15sp" />
 
@@ -252,10 +253,10 @@
             android:fontFamily="@font/poppins"
             android:hint="School"
             android:includeFontPadding="false"
-            android:inputType="textPassword"
+            android:inputType="text"
             android:padding="13dp"
             android:password="false"
-            android:textColor="@android:color/black"
+            android:textColor="@color/primary_green"
             android:textColorHint="@color/dark_grey"
             android:textSize="15sp" />
     </com.google.android.material.textfield.TextInputLayout>
@@ -290,9 +291,9 @@
             android:fontFamily="@font/poppins"
             android:hint="Course"
             android:includeFontPadding="false"
-            android:inputType="textPassword"
+            android:inputType="text"
             android:padding="13dp"
-            android:textColor="@android:color/black"
+            android:textColor="@color/primary_green"
             android:textColorHint="@color/dark_grey"
             android:textSize="15sp" />
     </com.google.android.material.textfield.TextInputLayout>

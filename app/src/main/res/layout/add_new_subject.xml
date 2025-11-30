@@ -15,7 +15,7 @@
         android:fontFamily="@font/poppins_bold"
         android:text="Add New Subject"
         android:textColor="@color/primary_green"
-        android:textSize="16sp"
+        android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -52,51 +52,85 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/folder_icon1" />
 
-    <RadioGroup
-        android:id="@+id/radioGroupColors"
+    <!-- 1. Wrap the RadioGroup in a HorizontalScrollView -->
+    <HorizontalScrollView
+        android:id="@+id/hScrollView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
+        android:scrollbars="none"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textColorLabel">
 
-        <!-- Note: No background or backgroundTint here. IDs must match Kotlin code. -->
-        <RadioButton
-            android:id="@+id/radioColor1"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginEnd="16dp"
-            android:checked="true" />
+        <!-- 2. The RadioGroup is now inside. Width must be wrap_content -->
+        <RadioGroup
+            android:id="@+id/radioGroupColors"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            >
 
-        <RadioButton
-            android:id="@+id/radioColor2"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginEnd="16dp" />
+            <RadioButton
+                android:id="@+id/radioColor1"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="16dp"
+                android:checked="true" />
 
-        <RadioButton
-            android:id="@+id/radioColor3"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginEnd="16dp" />
+            <RadioButton
+                android:id="@+id/radioColor2"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="16dp" />
 
-        <RadioButton
-            android:id="@+id/radioColor4"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginEnd="16dp" />
+            <RadioButton
+                android:id="@+id/radioColor3"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="16dp" />
 
-        <RadioButton
-            android:id="@+id/radioColor5"
-            android:layout_width="40dp"
-            android:layout_height="40dp" />
+            <RadioButton
+                android:id="@+id/radioColor4"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="16dp" />
 
-    </RadioGroup>
+            <RadioButton
+                android:id="@+id/radioColor5"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="16dp" />
+
+            <!-- NEW BUTTONS -->
+            <RadioButton
+                android:id="@+id/radioColor6"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="16dp" />
+
+            <RadioButton
+                android:id="@+id/radioColor7"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="16dp" />
+
+            <RadioButton
+                android:id="@+id/radioColor8"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="16dp" />
+
+            <RadioButton
+                android:id="@+id/radioColor9"
+                android:layout_width="40dp"
+                android:layout_height="40dp" />
+
+        </RadioGroup>
+    </HorizontalScrollView>
     <!-- === NEW COLOR PICKER SECTION END === -->
 
 
@@ -106,7 +140,7 @@
         android:layout_width="0dp"
         android:layout_height="75dp"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="24dp"
         android:hint="Subject Name"
         android:textColorHint="@color/dark_grey"
@@ -117,7 +151,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/radioGroupColors">
+        app:layout_constraintTop_toBottomOf="@+id/hScrollView">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/subN"
