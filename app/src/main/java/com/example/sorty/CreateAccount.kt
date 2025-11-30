@@ -10,6 +10,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import android.widget.Toast
 // Import the correct binding class
 import com.example.sorty.databinding.ActivityCreateAccountBinding
 // --- DATE PICKER IMPORTS ---
@@ -49,9 +50,46 @@ class CreateAccount : AppCompatActivity() {
         }
 
         continuebtn.setOnClickListener {
-            val intent = Intent(this, Home::class.java)
-            startActivity(intent)
+
+            val first = bind.editFirstName.text.toString()
+            val last = bind.editLastName.text.toString()
+            val bday = bind.editBday.text.toString()
+            val email = bind.editEmail.text.toString()
+            val school = bind.editSchool.text.toString()
+            val course = bind.editCourse.text.toString()
+
+            //  Validate inputs
+            if (first.isEmpty() || last.isEmpty() || bday.isEmpty() ||
+                email.isEmpty() || school.isEmpty() || course.isEmpty()) {
+
+                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            //  Insert into SQLite
+            val db = DatabaseHelper(this)
+            val success = db.insertUser(first, last, bday, email, school, course)
+
+            if (success) {
+                //  Show success message
+                Toast.makeText(this, "Account Created!", Toast.LENGTH_SHORT).show()
+
+                //  Go to Home and remove CreateAccount from back stack
+                val intent = Intent(this, Home::class.java)
+                // Option A: just finish CreateAccount
+                startActivity(intent)
+                finish()
+
+                // --- OR Option B: completely clear stack ---
+                // val intent = Intent(this, Home::class.java)
+                // intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                // startActivity(intent)
+
+            } else {
+                Toast.makeText(this, "Failed to save user!", Toast.LENGTH_SHORT).show()
+            }
         }
+
 
         // --- DATE PICKER INTEGRATION START ---
         // Set the click listener on the Date of Birth EditText (bind.dob)
