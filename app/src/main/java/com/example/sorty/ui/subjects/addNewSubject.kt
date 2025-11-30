@@ -86,7 +86,7 @@ class AddNewSubject : BottomSheetDialogFragment() {
         }
 
         bind.buttonAdd.setOnClickListener {
-            val subjectName = bind.subN.text.toString().trim()
+            val subjectName = bind.inputSubjectTitle.text.toString().trim()
             if (subjectName.isNotEmpty()) {
                 listener?.onSubjectAdded(subjectName, selectedColorHex)
                 dismiss()

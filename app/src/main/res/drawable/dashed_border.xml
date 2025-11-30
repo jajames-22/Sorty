@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- This makes the background transparent inside -->
+    <solid android:color="@android:color/transparent" />
+
+    <!-- This creates the "Broken" (Dashed) Gray Line -->
+    <stroke
+        android:width="2dp"
+        android:color="#FF888888"
+        android:dashWidth="8dp"
+        android:dashGap="4dp" />
+    <!-- dashWidth is the length of the line, dashGap is the empty space -->
+
+    <!-- This makes the corners rounded -->
+    <corners android:radius="16dp" />
+</shape>
