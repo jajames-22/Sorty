@@ -52,7 +52,7 @@ class CreateAccount : AppCompatActivity() {
             // 2. Validate inputs
             if (first.isEmpty() || last.isEmpty() || bday.isEmpty() ||
                 email.isEmpty() || school.isEmpty() || course.isEmpty()) {
-                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Please fill out all fields", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
