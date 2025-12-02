@@ -1,51 +1,44 @@
 package com.example.sorty
 
 import android.content.Intent
-import android.graphics.Color // IMPORT THIS
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.view.LayoutInflater // Added
 import android.view.View
+import android.view.ViewGroup // Added
 import android.view.Window
-import android.view.WindowInsetsController
+import android.widget.ImageView // Added
+import android.widget.TextView // Added
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat // IMPORT THIS
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.RecyclerView // Added for Adapter
 import com.example.sorty.databinding.ActivityMainBinding
+import com.google.android.material.tabs.TabLayoutMediator // Added for Dots
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var bind: ActivityMainBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         // 1. ENABLE EDGE-TO-EDGE
-        // This allows your app to draw behind the system bars.
         enableEdgeToEdge()
 
         bind = ActivityMainBinding.inflate(layoutInflater)
         setContentView(bind.root)
 
         // --- START: Fullscreen Transparent Styling ---
-
-        // 2. MAKE SYSTEM BARS TRANSPARENT
-        // This makes the status and navigation bars see-through.
         window.statusBarColor = Color.TRANSPARENT
         window.navigationBarColor = Color.TRANSPARENT
-
-        // 3. SET SYSTEM ICON COLORS
-        // We call our helper function. 'isLight' is false, meaning we want LIGHT icons
-        // because we assume the background of this activity is dark.
         setSystemBarAppearance(window, false)
-
         // --- END: Fullscreen Transparent Styling ---
 
-
         // 4. APPLY INSETS AS PADDING
-        // This listener is crucial. It gets the size of the transparent system bars
-        // and adds that space as padding to your root layout, preventing your UI
-        // (like login/create account buttons) from being hidden.
         ViewCompat.setOnApplyWindowInsetsListener(bind.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
@@ -54,42 +47,58 @@ class MainActivity : AppCompatActivity() {
 
         supportActionBar?.hide()
 
+        // =========================================================
+        // START: NEW CAROUSEL CODE (ViewPager2 + TabLayout)
+        // =========================================================
+
+        // 1. Define your slides data
+        // Ensure you have a drawable named "sorty_logo" (or change to whatever icon you want per slide)
+        val slides = listOf(
+            OnboardingItem(R.drawable.organize_logo, "Organize your files"),
+            OnboardingItem(R.drawable.upload_logo,   "Upload Documents"),
+            OnboardingItem(R.drawable.task_logo,     "Manage your tasks")
+        )
+
+        // 2. Setup Adapter using ViewBinding
+        // Note: bind.viewPager comes from the ID in activity_main.xml
+        val adapter = OnboardingAdapter(slides)
+        bind.viewPager.adapter = adapter
+
+        // 3. Attach Tabs (The Dots)
+        // Note: bind.tabLayout comes from the ID in activity_main.xml
+        TabLayoutMediator(bind.tabLayout, bind.viewPager) { _, _ ->
+            // No text needed in the tabs, just dots
+        }.attach()
+
+        // =========================================================
+        // END: NEW CAROUSEL CODE
+        // =========================================================
+
         val createacc = bind.createAcc
 
         createacc.setOnClickListener {
             val intent = Intent(this, CreateAccount::class.java)
             startActivity(intent)
         }
-
-
     }
 
     /**
-     * A helper function to control the color of status and navigation bar icons.
-     * @param window The activity's window.
-     * @param isLight true if the background is light (needs dark icons), false if the background is dark (needs light icons).
+     * Helper function for system bars
      */
     private fun setSystemBarAppearance(window: Window, isLight: Boolean) {
-        // Modern approach for API 30+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val controller = WindowCompat.getInsetsController(window, window.decorView)
-            // For status bar icons
             controller.isAppearanceLightStatusBars = isLight
-            // For navigation bar icons
             controller.isAppearanceLightNavigationBars = isLight
-        }
-        // Legacy approach for API 23-29
-        else {
+        } else {
             val decorView = window.decorView
             var flags = decorView.systemUiVisibility
             if (isLight) {
-                // Add flags to make icons dark
                 flags = flags or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     flags = flags or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
                 }
             } else {
-                // Remove flags to make icons light
                 flags = flags and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     flags = flags and View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
@@ -98,4 +107,38 @@ class MainActivity : AppCompatActivity() {
             decorView.systemUiVisibility = flags
         }
     }
+}
+
+// =========================================================
+// HELPER CLASSES FOR THE CAROUSEL
+// You can keep these at the bottom of the file
+// =========================================================
+
+data class OnboardingItem(val image: Int, val title: String)
+
+class OnboardingAdapter(private val items: List<OnboardingItem>) :
+    RecyclerView.Adapter<OnboardingAdapter.OnboardingViewHolder>() {
+
+    inner class OnboardingViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val image: ImageView = view.findViewById(R.id.slideIcon)
+        val text: TextView = view.findViewById(R.id.slideTitle)
+
+        fun bind(item: OnboardingItem) {
+            image.setImageResource(item.image)
+            text.text = item.title
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): OnboardingViewHolder {
+        // IMPORTANT: Ensure you created 'item_onboarding.xml' in layout folder!
+        return OnboardingViewHolder(
+            LayoutInflater.from(parent.context).inflate(R.layout.item_onboarding, parent, false)
+        )
+    }
+
+    override fun onBindViewHolder(holder: OnboardingViewHolder, position: Int) {
+        holder.bind(items[position])
+    }
+
+    override fun getItemCount(): Int = items.size
 }
