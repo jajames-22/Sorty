@@ -19,6 +19,20 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="Theme.Sorty.UCrop" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+
+        <!-- 👇 THIS IS THE FIX 👇 -->
+        <!-- This forces the content to sit BELOW the status bar, not behind it -->
+        <item name="android:fitsSystemWindows">true</item>
+
+        <!-- Optional: Set colors to match your app -->
+        <item name="colorPrimary">@color/primary_green</item>
+        <item name="colorPrimaryDark">@color/primary_green</item>
+        <item name="android:statusBarColor">@color/primary_green</item>
+    </style>
+
     <style name="Theme.Sorty.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="Theme.Sorty.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />

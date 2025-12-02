@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="24dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
@@ -224,8 +224,9 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
+    <!-- FIXED: Removed password attributes -->
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/input_password"
+        android:id="@+id/input_school"
         style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -243,8 +244,7 @@
         app:hintEnabled="false"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/input_email"
-        app:passwordToggleTint="@android:color/darker_gray">
+        app:layout_constraintTop_toBottomOf="@id/input_email">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/edit_school"
@@ -255,14 +255,14 @@
             android:includeFontPadding="false"
             android:inputType="text"
             android:padding="13dp"
-            android:password="false"
             android:textColor="@color/primary_green"
             android:textColorHint="@color/dark_grey"
             android:textSize="15sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <!-- FIXED: Removed password attributes -->
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/input_confirm_password"
+        android:id="@+id/input_course"
         style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -280,9 +280,7 @@
         app:hintEnabled="false"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/input_password"
-
-        app:passwordToggleTint="@android:color/darker_gray">
+        app:layout_constraintTop_toBottomOf="@id/input_school">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/edit_course"
@@ -325,7 +323,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/input_confirm_password" />
+        app:layout_constraintTop_toBottomOf="@+id/input_course" />
 
     <ImageButton
         android:id="@+id/backbtn"

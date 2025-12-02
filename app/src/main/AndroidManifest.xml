@@ -12,6 +12,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Sorty">
         <activity
+            android:name=".InsertPicture"
+            android:exported="false" />
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Sorty.UCrop" />
+        <activity
             android:name=".ui.home.addNotes"
             android:exported="false" />
         <activity
