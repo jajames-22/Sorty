@@ -11,6 +11,8 @@
         android:roundIcon="@drawable/sorty_logo_rounded"
         android:supportsRtl="true"
         android:theme="@style/Theme.Sorty">
+
+        <activity android:name=".ui.subjects.CourseActivity" />
         <activity
             android:name=".InsertPicture"
             android:exported="false" />
