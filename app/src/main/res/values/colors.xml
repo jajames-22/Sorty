@@ -11,4 +11,11 @@
     <color name="dark_grey">#808080</color>
     <color name="transparent">#00FFFFFF</color>
     <color name="dark_yellow">#EDCC88</color>
+        <color name="ongoing_border">#FFCC72</color>
+    <color name="ongoing_border_fill_placeholder">#FFCC72</color>
+        <color name="missed_border">#FFA1A1</color>
+    <color name="missed_border_fill_placeholder">#FFA1A1</color>
+        <color name="completed_border">#D3E4D4</color>
+    <color name="completed_border_fill_placeholder">#D3E4D4</color>
+
 </resources>

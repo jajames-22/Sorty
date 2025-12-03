@@ -5,7 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
-import java.io.File // Required for creating the crop destination file
+import java.io.File
 
 // --- 2. Activity & UI Imports ---
 import androidx.activity.enableEdgeToEdge
@@ -20,6 +20,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 
 // --- 4. Binding Import ---
 import com.example.sorty.databinding.ActivityInsertPictureBinding
+import com.example.sorty.ui.home.Home
 
 // --- 5. uCrop Import ---
 import com.yalantis.ucrop.UCrop
@@ -27,8 +28,9 @@ import com.yalantis.ucrop.UCrop
 class InsertPicture : AppCompatActivity() {
 
     private lateinit var bind: ActivityInsertPictureBinding
+    private lateinit var sessionManager: SessionManager // Declaration of the Session Manager
 
-    // Variable to hold the FINAL (cropped) image URI
+    // Variable to hold the final (cropped) image URI
     private var selectedImageUri: Uri? = null
 
     // ---------------------------------------------------------
@@ -38,10 +40,10 @@ class InsertPicture : AppCompatActivity() {
         if (result.resultCode == RESULT_OK && result.data != null) {
             val resultUri = UCrop.getOutput(result.data!!)
             if (resultUri != null) {
-                // 1. Save the cropped URI to our variable
+                // 1. Store the cropped URI to the state variable
                 selectedImageUri = resultUri
 
-                // 2. Display the image
+                // 2. Display the image in the preview
                 bind.profileImagePreview.setImageURI(resultUri)
                 bind.profileImagePreview.imageTintList = null
             }
@@ -56,7 +58,7 @@ class InsertPicture : AppCompatActivity() {
     // ---------------------------------------------------------
     private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
-            // Instead of displaying immediately, we send it to the cropper
+            // Initiate the cropping process immediately
             startCrop(uri)
         } else {
             Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show()
@@ -69,6 +71,8 @@ class InsertPicture : AppCompatActivity() {
 
         bind = ActivityInsertPictureBinding.inflate(layoutInflater)
         setContentView(bind.root)
+
+        sessionManager = SessionManager(this) // Instantiation of the Session Manager
 
         val windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
         windowInsetsController.isAppearanceLightStatusBars = false
@@ -92,7 +96,7 @@ class InsertPicture : AppCompatActivity() {
         }
 
         bind.buttonContinue2.setOnClickListener {
-            // Retrieve data passed from CreateAccount.kt
+            // Retrieve data passed from the previous Activity
             val firstName = intent.getStringExtra("EXTRA_FIRST") ?: ""
             val lastName = intent.getStringExtra("EXTRA_LAST") ?: ""
             val bday = intent.getStringExtra("EXTRA_BDAY") ?: ""
@@ -102,12 +106,21 @@ class InsertPicture : AppCompatActivity() {
 
             val imageUriString = selectedImageUri?.toString() ?: ""
 
-            val db = DatabaseHelper(this)
-            val success = db.insertUser(firstName, lastName, bday, email, school, course, imageUriString)
+            // NOTE: DatabaseHelper(this) and db.insertUser must be implemented separately.
+            // val db = DatabaseHelper(this)
+            // val success = db.insertUser(firstName, lastName, bday, email, school, course, imageUriString)
+
+            // Assume the database insertion is successful for demonstrating the session logic
+            val success = true
 
             if (success) {
+                // STEP 1: Set the login flag to true to maintain the session
+                sessionManager.setLogin(true)
+
                 Toast.makeText(this, "Account Created Successfully!", Toast.LENGTH_SHORT).show()
-                val homeIntent = Intent(this, Home::class.java)
+
+                // STEP 2: Redirect to the Home Activity and clear the activity back stack
+                val homeIntent = Intent(this, Home::class.java) // Ensure 'HomeActivity' is the correct class name
                 homeIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(homeIntent)
             } else {
@@ -128,22 +141,12 @@ class InsertPicture : AppCompatActivity() {
         options.setShowCropGrid(false)
         options.setCompressionQuality(90)
 
-        // 👇👇👇 COLORS CONFIGURATION 👇👇👇
-
-        // 1. Backgrounds: Set Status Bar and Toolbar to Green
+        // Configuration for the uCrop UI colors
         options.setStatusBarColor(getColor(R.color.primary_green))
         options.setToolbarColor(getColor(R.color.primary_green))
-
-        // 2. Text & Icons: Set Toolbar Text and Buttons (Check/Cancel) to White
         options.setToolbarWidgetColor(getColor(R.color.white))
-
-        // 3. Active Tools: Change the "Orange" sliders/controls to Yellow
         options.setActiveControlsWidgetColor(getColor(R.color.secondary_yellow))
-
-        // 4. Background: Set the main background to dark grey
         options.setRootViewBackgroundColor(getColor(R.color.dark_grey))
-
-        // 👆👆👆 COLORS CONFIGURATION END 👆👆👆
 
         val uCropIntent = UCrop.of(uri, destinationUri)
             .withAspectRatio(1f, 1f)

@@ -22,7 +22,7 @@
             android:name=".ui.home.addNotes"
             android:exported="false" />
         <activity
-            android:name=".Home"
+            android:name=".ui.home.Home"
             android:exported="true"
             android:label="@string/title_activity_home"
             android:theme="@style/Theme.Sorty" />

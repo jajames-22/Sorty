@@ -15,14 +15,31 @@ import com.example.sorty.databinding.ActivityCreateAccountBinding
 import android.app.DatePickerDialog
 import java.text.SimpleDateFormat
 import java.util.*
+// Tiyaking tama ang class name ng Home Activity mo
+import com.example.sorty.MainActivity // <--- PALITAN KUNG IBA ANG PANGALAN
+import com.example.sorty.ui.home.Home
 
 class CreateAccount : AppCompatActivity() {
 
     private lateinit var bind: ActivityCreateAccountBinding
     private val calendar = Calendar.getInstance()
+    private lateinit var sessionManager: SessionManager // Deklarasyon ng Session Manager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        sessionManager = SessionManager(this) // Instantiation
+
+        // HAKBANG 1: SESSION CHECK - I-redirect agad kung naka-login na
+        if (sessionManager.isLoggedIn()) {
+            val intent = Intent(this, Home::class.java)
+            startActivity(intent)
+            finish() // Isara ang CreateAccount Activity
+            return // Huwag na ituloy ang pag-render ng form
+        }
+
+
+
         enableEdgeToEdge()
 
         bind = ActivityCreateAccountBinding.inflate(layoutInflater)
@@ -36,12 +53,15 @@ class CreateAccount : AppCompatActivity() {
         }
         supportActionBar?.hide()
 
+        // FIXED: backbtn
         bind.backbtn.setOnClickListener {
             finish()
         }
 
+        // FIXED: button_continue (nagiging buttonContinue sa binding)
         bind.buttonContinue.setOnClickListener {
             // 1. Get inputs
+            // FIXED: edit_first_name (nagiging editFirstName sa binding)
             val first = bind.editFirstName.text.toString().trim()
             val last = bind.editLastName.text.toString().trim()
             val bday = bind.editBday.text.toString().trim()
@@ -56,7 +76,7 @@ class CreateAccount : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // 3. PASS DATA to InsertPicture instead of saving to DB
+            // 3. PASS DATA to InsertPicture
             val intent = Intent(this, InsertPicture::class.java)
 
             intent.putExtra("EXTRA_FIRST", first)
@@ -67,9 +87,9 @@ class CreateAccount : AppCompatActivity() {
             intent.putExtra("EXTRA_COURSE", course)
 
             startActivity(intent)
-            // Do not finish() here if you want the user to be able to come back and edit details
         }
 
+        // FIXED: edit_bday
         bind.editBday.setOnClickListener {
             showDatePickerDialog()
         }

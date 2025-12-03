@@ -1,4 +1,4 @@
-package com.example.sorty
+package com.example.sorty.ui.home
 
 import android.graphics.Color
 import android.os.Bundle
@@ -8,12 +8,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat // This class contains the 'Type'
+import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.example.sorty.R
 import com.example.sorty.databinding.ActivityHomeBinding
 
 class Home : AppCompatActivity() {
