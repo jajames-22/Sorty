@@ -1,5 +1,6 @@
 package com.example.sorty.ui.subjects
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -29,6 +30,17 @@ class SubjectsFragment : Fragment(), AddNewSubject.AddNewSubjectListener {
         addSubjectBtn.setOnClickListener {
             showAddNewSubjectSheet()
         }
+
+        bind.btnTestCourse.setOnClickListener {
+            val intent = Intent(requireContext(), CourseActivity::class.java)
+
+            // Optional: Pass some test data so the screen isn't empty
+            intent.putExtra("COURSE_NAME", "Test Subject 101")
+            intent.putExtra("COURSE_DESC", "This is a description passed from the Fragment.")
+
+            startActivity(intent)
+        }
+
     }
 
     private fun showAddNewSubjectSheet() {
