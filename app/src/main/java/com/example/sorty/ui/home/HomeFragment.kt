@@ -114,7 +114,7 @@ private fun showTaskDetails(taskId: Long) {
         applyFilterButtonColor()
 
         // 3. Update the UI text of the dropdown button
-        bind.filterDropdown.text = currentFilter.name.lowercase().replaceFirstChar { it.titlecase(Locale.getDefault()) } + " \u25BC"
+        bind.filterDropdown.text = currentFilter.name.lowercase().replaceFirstChar { it.titlecase(Locale.getDefault()) }
     }
 
     /**

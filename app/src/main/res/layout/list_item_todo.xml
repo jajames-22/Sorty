@@ -6,66 +6,79 @@
     android:layout_height="wrap_content"
     android:clickable="true"
     android:focusable="true"
-    android:paddingBottom="12dp">
+    android:paddingBottom="12dp"
+    android:background="@android:color/transparent">
+    <!-- 👆 FIXED: Added Transparent Background to Root to stop gray corners -->
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/card_task_item"
-        android:layout_width="match_parent"
+    <!-- REMOVED CARDVIEW: It was causing the gray artifacts.
+         The inner layout handles the border and rounding perfectly on its own. -->
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/innerConstraintLayout"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="0dp"
+        android:background="@drawable/rounded_background_item_outline"
+        android:padding="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/innerConstraintLayout"
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/text_emoji_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:gravity="center_horizontal|center_vertical"
+            android:textColor="@android:color/black"
+            android:textSize="24sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="📚" />
+
+        <!-- FIXED: Changed width from 285dp to 0dp (Match Constraints)
+             so it doesn't overlap the checkbox on small screens -->
+        <TextView
+            android:id="@+id/text_task_label"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="@drawable/rounded_background_item_outline"
-            android:padding="16dp">
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="8dp"
+            android:ellipsize="end"
+            android:fontFamily="@font/poppins_bold"
+            android:includeFontPadding="false"
+            android:singleLine="true"
+            android:textColor="@android:color/black"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@id/checkbox_task_complete"
+            app:layout_constraintStart_toEndOf="@id/text_emoji_icon"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Label Name" />
 
-            <TextView
-                android:id="@+id/text_emoji_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="24sp"
-                android:textColor="@android:color/black"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                tools:text="📚" />
+        <TextView
+            android:id="@+id/text_task_datetime"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:fontFamily="@font/poppins"
+            android:includeFontPadding="false"
+            android:textColor="@color/primary_green"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toStartOf="@id/checkbox_task_complete"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="@id/text_task_label"
+            app:layout_constraintTop_toBottomOf="@id/text_task_label"
+            tools:text="Dec 12, 2025 | 10:00 am" />
 
-            <TextView
-                android:id="@+id/text_task_label"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:textColor="@android:color/black"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toStartOf="@id/checkbox_task_complete"
-                app:layout_constraintStart_toEndOf="@id/text_emoji_icon"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="Label Name" />
+        <CheckBox
+            android:id="@+id/checkbox_task_complete"
+            android:layout_width="41dp"
+            android:layout_height="40dp"
+            android:gravity="center_horizontal|center_vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-            <TextView
-                android:id="@+id/text_task_datetime"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:textColor="@color/primary_green"
-                android:textSize="12sp"
-                app:layout_constraintEnd_toStartOf="@id/checkbox_task_complete"
-                app:layout_constraintStart_toStartOf="@id/text_task_label"
-                app:layout_constraintTop_toBottomOf="@id/text_task_label"
-                tools:text="Dec 12, 2025 | 10:00 am" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <CheckBox
-                android:id="@+id/checkbox_task_complete"
-                android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </androidx.cardview.widget.CardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

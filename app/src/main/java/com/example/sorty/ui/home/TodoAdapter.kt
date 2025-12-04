@@ -108,9 +108,11 @@ class TodoAdapter(
 
             // Apply the new stroke color (using 2dp width)
             drawable.setStroke(
-                4, // Stroke width (using 4 pixels for visibility, approx 2dp)
+                8, // Stroke width (using 4 pixels for visibility, approx 2dp)
                 colorInt
             )
+
+            drawable.cornerRadius = 45f
         }
     }
 
