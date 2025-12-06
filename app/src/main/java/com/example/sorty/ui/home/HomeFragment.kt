@@ -1,30 +1,31 @@
 package com.example.sorty.ui.home
 
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.sorty.databinding.FragmentHomeBinding
-// Assuming the following files are in their respective packages as per structure:
-import com.example.sorty.ui.home.TodoAdapter
-import com.example.sorty.ui.home.TaskDatabaseHelper
-import com.example.sorty.ui.home.TaskDetailFragment
-import com.example.sorty.data.models.Task
-import com.example.sorty.ui.home.TaskFilter // Assuming TaskFilter is in 'util'
-import java.util.Locale
-import androidx.core.content.ContextCompat
-import android.graphics.drawable.GradientDrawable
+import com.example.sorty.DatabaseHelper // 👈 CHANGED: Import the unified Helper
 import com.example.sorty.R
+import com.example.sorty.data.models.Task
+import com.example.sorty.databinding.FragmentHomeBinding
+import com.example.sorty.ui.home.TaskDetailFragment
+import com.example.sorty.ui.home.TaskFilter
+import com.example.sorty.ui.home.TodoAdapter
+import java.util.Locale
 
 class HomeFragment : Fragment() {
 
     private lateinit var bind: FragmentHomeBinding
     private lateinit var todoAdapter: TodoAdapter
-    private lateinit var taskDbHelper: TaskDatabaseHelper
+
+    // 👇 CHANGED: Renamed variable and type to the unified helper
+    private lateinit var dbHelper: DatabaseHelper
 
     // Track the currently active filter (Default to ONGOING)
     private var currentFilter: TaskFilter = TaskFilter.ONGOING
@@ -40,8 +41,8 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Initialize Database Helper
-        taskDbHelper = TaskDatabaseHelper(requireContext())
+        // 👇 CHANGED: Initialize the Unified Database Helper
+        dbHelper = DatabaseHelper(requireContext())
 
         setupRecyclerView()
         setupListeners()
@@ -49,25 +50,19 @@ class HomeFragment : Fragment() {
     }
 
     // --- Setup RecyclerView and Adapter ---
-    // Inside HomeFragment.kt
-private fun showTaskDetails(taskId: Long) {
+    private fun showTaskDetails(taskId: Long) {
         // Perform safety checks before starting a Fragment transaction
-        // (This prevents the IllegalStateException we fixed earlier)
         if (isAdded && !childFragmentManager.isStateSaved) {
-
-            // 1. Create the instance of the detail fragment, passing the Task ID
             val detailFragment = TaskDetailFragment.newInstance(taskId)
-
-            // 2. Use childFragmentManager to display the Bottom Sheet
             detailFragment.show(childFragmentManager, "TaskDetailSheet")
         }
     }
+
     private fun setupRecyclerView() {
         todoAdapter = TodoAdapter(
             tasks = emptyList(),
 
             onItemClicked = { task ->
-                // --- UPDATED: Calls the helper function to launch the detail sheet ---
                 showTaskDetails(task.id)
             },
 
@@ -84,7 +79,9 @@ private fun showTaskDetails(taskId: Long) {
 
     // --- Database Update Function (Checkbox) ---
     private fun updateTaskCompletion(task: Task, isCompleted: Boolean) {
-        val success = taskDbHelper.updateTaskCompletion(task.id, isCompleted)
+        // 👇 CHANGED: Use dbHelper
+        val success = dbHelper.updateTaskCompletion(task.id, isCompleted)
+
         if (success) {
             loadTasksFromDatabase() // Reload list to reflect changes/filtering
             Toast.makeText(context, "${task.title} set to ${if (isCompleted) "Completed" else "Ongoing"}", Toast.LENGTH_SHORT).show()
@@ -93,15 +90,13 @@ private fun showTaskDetails(taskId: Long) {
         }
     }
 
-
-
     // --- Core Filtering Logic ---
-     fun loadTasksFromDatabase() {
-        // 1. Query the database based on the current filter state
+    fun loadTasksFromDatabase() {
+        // 👇 CHANGED: Use dbHelper for all queries
         val tasks = when (currentFilter) {
-            TaskFilter.ONGOING -> taskDbHelper.getOngoingTasks(System.currentTimeMillis())
-            TaskFilter.COMPLETED -> taskDbHelper.getCompletedTasks()
-            TaskFilter.MISSED -> taskDbHelper.getMissedTasks(System.currentTimeMillis())
+            TaskFilter.ONGOING -> dbHelper.getOngoingTasks(System.currentTimeMillis())
+            TaskFilter.COMPLETED -> dbHelper.getCompletedTasks()
+            TaskFilter.MISSED -> dbHelper.getMissedTasks(System.currentTimeMillis())
         }
 
         if (tasks.isEmpty()) {
@@ -123,7 +118,6 @@ private fun showTaskDetails(taskId: Long) {
     private fun applyFilterButtonColor() {
         // Map status to the corresponding placeholder color resource ID
         val colorResId = when (currentFilter) {
-            // Using the defined placeholder IDs for the fill color
             TaskFilter.ONGOING -> R.color.ongoing_border_fill_placeholder
             TaskFilter.COMPLETED -> R.color.completed_border_fill_placeholder
             TaskFilter.MISSED -> R.color.missed_border_fill_placeholder
@@ -141,7 +135,6 @@ private fun showTaskDetails(taskId: Long) {
     private fun setupListeners() {
         // FAB Listener
         bind.addNotesBtn.setOnClickListener {
-            // Check fragment state for safe transaction
             if (isAdded && !childFragmentManager.isStateSaved) {
                 val bottomSheet = addNotes()
                 bottomSheet.show(childFragmentManager, "AddNotesSheet")
@@ -165,7 +158,6 @@ private fun showTaskDetails(taskId: Long) {
         }
 
         popup.setOnMenuItemClickListener { menuItem ->
-            // Map the menu item ID to the TaskFilter enum
             val selectedFilter = when (menuItem.itemId) {
                 1 -> TaskFilter.ONGOING
                 2 -> TaskFilter.COMPLETED

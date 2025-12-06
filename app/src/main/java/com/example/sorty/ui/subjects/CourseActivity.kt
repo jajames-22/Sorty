@@ -1,19 +1,26 @@
 package com.example.sorty.ui.subjects
 
-import com.example.sorty.R
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import com.example.sorty.DatabaseHelper // 👈 Import DatabaseHelper
+import com.example.sorty.R
+import com.example.sorty.ui.home.addNotes
 
 class CourseActivity : AppCompatActivity() {
 
-    // Declare UI components
+    // UI Components
     private lateinit var btnBack: ImageButton
     private lateinit var tvSubjectName: TextView
     private lateinit var tvSubjectDescription: TextView
@@ -23,31 +30,47 @@ class CourseActivity : AppCompatActivity() {
     private lateinit var tabTodo: TextView
     private lateinit var tabFiles: TextView
 
-    // Content Layouts
+    // Layouts
     private lateinit var layoutContentTodo: ConstraintLayout
     private lateinit var layoutContentFiles: ConstraintLayout
 
-    // Action Buttons
+    // Buttons
     private lateinit var btnAddTodo: Button
     private lateinit var btnAddFile: Button
     private lateinit var tvFilterOngoing: TextView
 
+    // Data Helpers
+    private lateinit var dbHelper: DatabaseHelper // 👈 Declare DatabaseHelper
+    private var currentCourseId: Int = -1
+    private var currentCourseName: String = ""
+    private var currentCourseDesc: String = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         supportActionBar?.hide()
         setContentView(R.layout.activity_course)
 
-        // 1. Initialize Views
+        // 1. Initialize Database Helper
+        dbHelper = DatabaseHelper(this)
+
+        // --- Fix Navigation Bar ---
+        window.navigationBarColor = Color.WHITE
+        val windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
+        windowInsetsController.isAppearanceLightNavigationBars = true
+
+        // --- Fix Status Bar Overlap ---
+        val rootView = findViewById<View>(R.id.main)
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
+
         initViews()
-
-        // 2. Set up Button Listeners
+        loadCourseData() // Load data from DB
         setupListeners()
-
-        // 3. Set up Tab Switching Logic
         setupTabs()
-
-        // 4. (Optional) Load initial data (e.g., from Intent)
-        loadCourseData()
     }
 
     private fun initViews() {
@@ -67,88 +90,85 @@ class CourseActivity : AppCompatActivity() {
         tvFilterOngoing = findViewById(R.id.tv_filter_ongoing)
     }
 
-    private fun setupListeners() {
-        // Back Button
-        btnBack.setOnClickListener {
-            finish() // Closes this activity and goes back
-        }
+    private fun loadCourseData() {
+        // 1. Get the ID passed from the previous screen
+        currentCourseId = intent.getIntExtra("COURSE_ID", -1)
 
-        // Edit Course Button
+        if (currentCourseId != -1) {
+            // 2. Fetch the latest data from the Database
+            val subject = dbHelper.getSubjectById(currentCourseId)
+
+            if (subject != null) {
+                currentCourseName = subject.name
+                currentCourseDesc = subject.description
+
+                // Update UI
+                tvSubjectName.text = currentCourseName
+                tvSubjectDescription.text = currentCourseDesc
+            } else {
+                // Fallback if DB fetch fails (e.g. subject deleted)
+                tvSubjectName.text = "Error"
+                tvSubjectDescription.text = "Subject not found."
+            }
+        } else {
+            // Fallback if no ID passed
+            tvSubjectName.text = intent.getStringExtra("COURSE_NAME") ?: "Course Name"
+            tvSubjectDescription.text = intent.getStringExtra("COURSE_DESC") ?: "No description"
+        }
+    }
+
+    private fun setupListeners() {
+        btnBack.setOnClickListener { finish() }
+
         btnEditCourse.setOnClickListener {
             Toast.makeText(this, "Edit Course clicked", Toast.LENGTH_SHORT).show()
-            // TODO: Open an edit dialog or activity here
         }
 
-        // Add To-do Button
+        // --- Open Add Notes Bottom Sheet ---
         btnAddTodo.setOnClickListener {
-            Toast.makeText(this, "Add To-do clicked", Toast.LENGTH_SHORT).show()
-            // TODO: Open Add Task logic
+            val bottomSheet = addNotes()
+
+            // Pass the subject name so it can pre-select it in the dropdown
+            val args = Bundle()
+            args.putString("arg_preset_subject", currentCourseName)
+            bottomSheet.arguments = args
+
+            bottomSheet.show(supportFragmentManager, "AddNotesSheet")
         }
 
-        // Add File Button
         btnAddFile.setOnClickListener {
             Toast.makeText(this, "Add File clicked", Toast.LENGTH_SHORT).show()
-            // TODO: Open File Picker logic
         }
 
-        // Filter Dropdown
         tvFilterOngoing.setOnClickListener {
             Toast.makeText(this, "Filter clicked", Toast.LENGTH_SHORT).show()
-            // TODO: Show a popup menu for filtering (Ongoing, Completed, etc.)
         }
     }
 
     private fun setupTabs() {
-        // Click Listener for "To-do" Tab
-        tabTodo.setOnClickListener {
-            updateTabSelection(isTodoSelected = true)
-        }
-
-        // Click Listener for "Files" Tab
-        tabFiles.setOnClickListener {
-            updateTabSelection(isTodoSelected = false)
-        }
+        tabTodo.setOnClickListener { updateTabSelection(isTodoSelected = true) }
+        tabFiles.setOnClickListener { updateTabSelection(isTodoSelected = false) }
     }
 
     private fun updateTabSelection(isTodoSelected: Boolean) {
         if (isTodoSelected) {
-            // --- SHOW TODO ---
-
-            // 1. Toggle Layout Visibility
             layoutContentTodo.visibility = View.VISIBLE
             layoutContentFiles.visibility = View.GONE
 
-            // 2. Update Tab Backgrounds
             tabTodo.setBackgroundResource(R.drawable.bg_tab_selected_rounded)
-            tabFiles.setBackgroundResource(R.drawable.bg_tab_unselected_rounded) // or 0 for transparent
+            tabFiles.setBackgroundResource(R.drawable.bg_tab_unselected_rounded)
 
-            // 3. Update Text Colors
             tabTodo.setTextColor(ContextCompat.getColor(this, R.color.black_text))
             tabFiles.setTextColor(ContextCompat.getColor(this, R.color.grey_text))
-
         } else {
-            // --- SHOW FILES ---
-
-            // 1. Toggle Layout Visibility
             layoutContentTodo.visibility = View.GONE
             layoutContentFiles.visibility = View.VISIBLE
 
-            // 2. Update Tab Backgrounds
             tabTodo.setBackgroundResource(R.drawable.bg_tab_unselected_rounded)
             tabFiles.setBackgroundResource(R.drawable.bg_tab_selected_rounded)
 
-            // 3. Update Text Colors
             tabTodo.setTextColor(ContextCompat.getColor(this, R.color.grey_text))
             tabFiles.setTextColor(ContextCompat.getColor(this, R.color.black_text))
         }
-    }
-
-    private fun loadCourseData() {
-        // This is where you get data sent from the previous screen
-        val courseName = intent.getStringExtra("COURSE_NAME") ?: "Course Name"
-        val courseDesc = intent.getStringExtra("COURSE_DESC") ?: "No description available."
-
-        tvSubjectName.text = courseName
-        tvSubjectDescription.text = courseDesc
     }
 }

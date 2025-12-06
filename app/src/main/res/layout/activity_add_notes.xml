@@ -7,25 +7,14 @@
     android:layout_height="match_parent"
     android:background="@color/white"
     android:backgroundTint="@color/white"
-    android:padding="00dp"
+    android:padding="0dp"
     tools:context=".ui.home.addNotes">
 
-    <TextView
-        android:id="@+id/textColorLabel2"
-        android:layout_width="160dp"
-        android:layout_height="24dp"
-        android:layout_marginStart="24dp"
-        android:fontFamily="@font/poppins"
-        android:text="Include an Emoji!"
-        android:textColor="@color/dark_grey"
-        android:textSize="14sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView4" />
-
+    <!-- HEADER SECTION -->
     <TextView
         android:id="@+id/textView4"
-        android:layout_width="164dp"
-        android:layout_height="35dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="24dp"
         android:fontFamily="@font/poppins_bold"
@@ -35,31 +24,42 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
+    <TextView
+        android:id="@+id/textColorLabel2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:fontFamily="@font/poppins"
+        android:text="Include an Emoji!"
+        android:textColor="@color/dark_grey"
+        android:textSize="14sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView4" />
+
+    <TextView
         android:id="@+id/emojiPreview"
-        android:layout_width="92dp"
+        android:layout_width="93dp"
         android:layout_height="93dp"
         android:layout_marginStart="24dp"
         android:layout_marginTop="24dp"
         android:background="@drawable/dashed_border"
-        android:padding="20dp"
+        android:gravity="center"
+        android:text="📌"
+        android:textColor="@color/black"
+        android:textSize="40sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textColorLabel2"
-        app:srcCompat="@drawable/baseline_emoji_emotions_24" />
+        app:layout_constraintTop_toBottomOf="@+id/textColorLabel2" />
 
     <Button
         android:id="@+id/addEmojiBtn"
         android:layout_width="101dp"
         android:layout_height="53dp"
         android:layout_marginStart="16dp"
-
         android:backgroundTint="@color/primary_green"
         android:fontFamily="@font/poppins"
         android:includeFontPadding="false"
         android:insetTop="16dp"
-
         android:insetBottom="0dp"
-
         android:text="Edit"
         android:textAllCaps="false"
         android:textColor="@color/white"
@@ -72,22 +72,26 @@
         app:layout_constraintBottom_toBottomOf="@+id/emojiPreview"
         app:layout_constraintStart_toEndOf="@+id/emojiPreview" />
 
+    <!-- SCROLL VIEW (THE MIDDLE SECTION) -->
+    <!-- layout_height="0dp" allows it to stretch between the emoji and the buttons -->
     <ScrollView
         android:id="@+id/scrollView2"
         android:layout_width="0dp"
-        android:layout_height="285dp"
+        android:layout_height="300dp"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="24dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/buttonAdd2"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/emojiPreview">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingBottom="24dp">
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/noteTitle"
@@ -110,23 +114,49 @@
                     android:inputType="text"
                     android:textColor="@color/black"
                     android:textColorHint="@color/primary_green"
-                    android:textSize="16dp" />
+                    android:textSize="16sp" />
 
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/subjectSelectorLayout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@color/white"
+                android:backgroundTint="@color/white"
+                android:hint="Select Subject"
+                android:textColorHint="@color/dark_grey"
+                app:boxStrokeColor="@color/primary_green"
+                app:boxStrokeWidth="2dp"
+                app:cursorColor="@color/primary_green"
+                app:hintTextColor="@color/primary_green"
+                app:boxBackgroundColor="@color/white">
+
+                <AutoCompleteTextView
+                    android:id="@+id/autoCompleteSubject"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins"
+                    android:includeFontPadding="false"
+                    android:inputType="none"
+                    android:text="None"
+                    android:textColor="@color/black"
+                    android:textSize="16sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/noteContent"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
-                android:layout_height="154dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:hint="Content"
-
                 android:textColorHint="@color/dark_grey"
                 app:boxStrokeColor="@color/primary_green"
                 app:boxStrokeWidth="2dp"
                 app:cursorColor="@color/primary_green"
-
                 app:hintTextColor="@color/primary_green">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -135,12 +165,10 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/poppins"
                     android:gravity="top|start"
-
                     android:includeFontPadding="false"
                     android:inputType="textMultiLine|textCapSentences"
                     android:maxLines="10"
                     android:minLines="5"
-
                     android:scrollbars="vertical"
                     android:textColor="@color/black"
                     android:textColorHint="@color/primary_green" />
@@ -150,27 +178,36 @@
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/notifySwitch"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="34dp"
                 android:layout_marginTop="10dp"
-
-                android:text="Notify Me"
                 android:fontFamily="@font/poppins"
+                android:includeFontPadding="false"
+                android:text="Notify Me"
                 android:textColor="@color/black"
-
                 app:thumbTint="@color/switch_colors"
-                app:trackTint="@color/switch_colors_track"
-                />
+                app:trackTint="@color/switch_colors_track" />
+
+            <TextView
+                android:id="@+id/notifydatetime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins"
+                android:includeFontPadding="false"
+                android:textColor="@color/primary_green"
+                android:textSize="13sp"
+                tools:text="Dec 25, 2024 | 10:00 AM" />
 
         </LinearLayout>
     </ScrollView>
 
+    <!-- FOOTER BUTTONS -->
+    <!-- Anchored to Parent BOTTOM -->
     <Button
         android:id="@+id/buttonAdd2"
         android:layout_width="107dp"
         android:layout_height="50dp"
-        android:layout_marginTop="16dp"
         android:layout_marginEnd="24dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="24dp"
         android:backgroundTint="@color/primary_green"
         android:fontFamily="@font/poppins"
         android:includeFontPadding="false"
@@ -181,8 +218,7 @@
         android:textColor="@color/white"
         app:cornerRadius="100dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/scrollView2" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <Button
         android:id="@+id/btnCancel"
@@ -199,9 +235,8 @@
         android:textAllCaps="false"
         android:textColor="@color/white"
         app:cornerRadius="100dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/buttonAdd2"
         app:layout_constraintEnd_toStartOf="@+id/buttonAdd2"
-        app:layout_constraintTop_toTopOf="@+id/buttonAdd2"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toTopOf="@+id/buttonAdd2" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

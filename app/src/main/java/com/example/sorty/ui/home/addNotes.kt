@@ -1,4 +1,3 @@
-
 package com.example.sorty.ui.home
 
 import android.app.DatePickerDialog
@@ -8,17 +7,18 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.TextView
 import android.widget.Toast
+import com.example.sorty.DatabaseHelper // 👈 Import the Unified Helper
+import com.example.sorty.R
+import com.example.sorty.data.models.Task
 import com.example.sorty.databinding.ActivityAddNotesBinding
 import com.example.sorty.ui.home.addNotesFiles.EmojiPickerFragment
 import com.example.sorty.ui.home.addNotesFiles.EmojiSelectedListener
-import com.google.android.material.R
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.example.sorty.ui.home.TaskDatabaseHelper
-import com.example.sorty.data.models.Task
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -26,13 +26,14 @@ import java.util.Locale
 class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
 
     private lateinit var bind: ActivityAddNotesBinding
-    private lateinit var taskDbHelper: TaskDatabaseHelper
 
-    // State Variables
+    // 👇 CHANGED: Use the unified DatabaseHelper
+    private lateinit var dbHelper: DatabaseHelper
+
     private var selectedReminderTimestamp: Long? = null
     private var selectedEmoji: String = "📌"
     private var taskIdToEdit: Long? = null
-    private var taskIsCompleted: Boolean = false // Stores original completion status
+    private var taskIsCompleted: Boolean = false
 
     companion object {
         private const val ARG_TASK_ID = "arg_task_id"
@@ -49,20 +50,24 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         isCancelable = false
+        taskIdToEdit = arguments?.getLong(ARG_TASK_ID) ?: 0L
 
-        taskIdToEdit = arguments?.getLong(ARG_TASK_ID) ?: 0L // Default to 0L if null
-        // CRITICAL FIX: Instantiate Database Helper here (as it requires context)
-        taskDbHelper = TaskDatabaseHelper(requireContext())
+        // 👇 INITIALIZE: The unified helper
+        dbHelper = DatabaseHelper(requireContext())
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState) as BottomSheetDialog
         dialog.setOnShowListener {
-            val bottomSheet = dialog.findViewById<View>(R.id.design_bottom_sheet)
-            bottomSheet?.let {
-                val behavior = BottomSheetBehavior.from(it)
-                behavior.state = BottomSheetBehavior.STATE_EXPANDED
-                behavior.isDraggable = false
+            // "Magic Fix" for Bottom Sheet ID
+            val bottomSheetId = resources.getIdentifier("design_bottom_sheet", "id", "com.google.android.material")
+            if (bottomSheetId != 0) {
+                val bottomSheet = dialog.findViewById<View>(bottomSheetId)
+                bottomSheet?.let {
+                    val behavior = BottomSheetBehavior.from(it)
+                    behavior.state = BottomSheetBehavior.STATE_EXPANDED
+                    behavior.isDraggable = false
+                }
             }
         }
         return dialog
@@ -79,47 +84,62 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // --- EDIT MODE CHECK & INITIAL LOAD ---
+        setupSubjectDropdown()
+
+        // Set default text
+        bind.notifydatetime.text = "Notifying schedule is not set"
+
         if (taskIdToEdit != 0L) {
-            // Load task if in edit mode (Ensure the database helper is initialized in onCreate)
             loadExistingTask(taskIdToEdit!!)
         } else {
-            // Default setup for adding new task
             updateEmojiPreview(selectedEmoji)
         }
 
         setupListeners()
     }
 
-    // --- Data Loading for Editing ---
-    private fun loadExistingTask(taskId: Long) {
-        val existingTask = taskDbHelper.getTaskById(taskId)
-        existingTask?.let { task ->
-            // Update UI components for Edit Mode
-            bind.textView4.text = "Edit Note"
-            bind.buttonAdd2.text = "Save Changes"
+    private fun setupSubjectDropdown() {
+        // 👇 1. FETCH FROM DATABASE: Get all subjects
+        val subjectList = dbHelper.getAllSubjects()
 
-            // Load saved data into fields
+        // 👇 2. EXTRACT NAMES: Convert to a list of strings
+        val subjectNames = subjectList.map { it.name }.toMutableList()
+
+        // 👇 3. ADD "None" as the first option
+        subjectNames.add(0, "None")
+
+        // 👇 4. SETUP ADAPTER
+        val adapter = ArrayAdapter(requireContext(), R.layout.dropdown_item, subjectNames)
+        bind.autoCompleteSubject.setAdapter(adapter)
+        bind.autoCompleteSubject.setDropDownBackgroundResource(R.color.white)
+        bind.autoCompleteSubject.setText("None", false)
+    }
+
+    private fun loadExistingTask(taskId: Long) {
+        // 👇 CHANGED: Use dbHelper
+        val existingTask = dbHelper.getTaskById(taskId)
+
+        existingTask?.let { task ->
+            bind.textView4.text = "Edit Note"
+            bind.buttonAdd2.text = "Save"
             bind.inputNoteTitle.setText(task.title)
             bind.inputNoteContent.setText(task.content)
 
-            // Set state variables
+            val savedCategory = if (task.category.isNullOrEmpty()) "None" else task.category
+            bind.autoCompleteSubject.setText(savedCategory, false)
+
             selectedEmoji = task.emojiIcon
             selectedReminderTimestamp = task.dueDate
-            taskIsCompleted = task.isCompleted // Save completion status
+            taskIsCompleted = task.isCompleted
 
-            // Update UI preview
             updateEmojiPreview(task.emojiIcon)
 
-            // Handle Reminder Switch
             if (task.dueDate > 0L) {
                 bind.notifySwitch.isChecked = true
                 displayReminderTime(task.dueDate)
             }
         }
     }
-
-    // --- Emoji Picker Logic ---
 
     private fun showEmojiPicker() {
         val picker = EmojiPickerFragment()
@@ -129,18 +149,12 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
 
     private fun updateEmojiPreview(emoji: String) {
         selectedEmoji = emoji
-        // FIX: The as? TextView cast is causing problems.
-        // Assuming the binding property is named 'emojiPreview' and is a TextView:
-        // (If bind.emojiPreview is the TextView)
-        // If your bind.emojiPreview is truly the TextView, remove the cast or fix the XML.
-        (bind.emojiPreview as? TextView)?.text = emoji // Keeping the cast for compatibility
+        (bind.emojiPreview as? TextView)?.text = emoji
     }
 
     override fun onEmojiSelected(emoji: String) {
         updateEmojiPreview(emoji)
     }
-
-    // --- Save/Update Logic ---
 
     private fun saveNoteAndDismiss() {
         val title = bind.inputNoteTitle.text.toString().trim()
@@ -148,79 +162,66 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
         val emoji = selectedEmoji
         val reminder = selectedReminderTimestamp ?: 0L
 
+        var subject = bind.autoCompleteSubject.text.toString()
+        if (subject == "None") subject = ""
+
         if (title.isEmpty()) {
             Toast.makeText(context, "Note Title cannot be empty.", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Logic Switch: UPDATE vs. INSERT
         if (taskIdToEdit != 0L) {
-            // == UPDATE EXISTING TASK ==
             val updatedTask = Task(
-                id = taskIdToEdit!!, // Use the existing ID
+                id = taskIdToEdit!!,
                 title = title,
                 content = content,
                 dueDate = reminder,
-                category = null,
-                isCompleted = taskIsCompleted, // Use the stored completion status
+                category = subject,
+                isCompleted = taskIsCompleted,
                 emojiIcon = emoji
             )
-            val success = taskDbHelper.updateFullTask(updatedTask)
+            // 👇 CHANGED: Use dbHelper
+            val success = dbHelper.updateFullTask(updatedTask)
 
-            if (success) {
-                Toast.makeText(context, "Note Updated: $title", Toast.LENGTH_LONG).show()
-            } else {
-                Toast.makeText(context, "Error updating task!", Toast.LENGTH_SHORT).show()
-            }
+            if (success) Toast.makeText(context, "Note Updated", Toast.LENGTH_SHORT).show()
+            else Toast.makeText(context, "Error updating task!", Toast.LENGTH_SHORT).show()
 
         } else {
-            // == INSERT NEW TASK ==
             val newTask = Task(
                 id = 0L,
                 title = title,
                 content = content,
                 dueDate = reminder,
-                category = null,
+                category = subject,
                 isCompleted = false,
                 emojiIcon = emoji
             )
-            val success = taskDbHelper.insertTask(newTask)
+            // 👇 CHANGED: Use dbHelper
+            val success = dbHelper.insertTask(newTask)
 
-            if (success) {
-                Toast.makeText(context, "Note Added: $title", Toast.LENGTH_LONG).show()
-            } else {
-                Toast.makeText(context, "Error saving task!", Toast.LENGTH_SHORT).show()
-            }
+            if (success) Toast.makeText(context, "Note Added", Toast.LENGTH_SHORT).show()
+            else Toast.makeText(context, "Error saving task!", Toast.LENGTH_SHORT).show()
         }
 
-        // Notify HomeFragment to refresh list after saving/updating (Assuming HomeFragment has this public function)
         (parentFragment as? HomeFragment)?.loadTasksFromDatabase()
         dismiss()
     }
-
-    // --- Date/Time Picker Logic ---
 
     private fun setupListeners() {
         bind.btnCancel.setOnClickListener { dismiss() }
         bind.buttonAdd2.setOnClickListener { saveNoteAndDismiss() }
         bind.addEmojiBtn.setOnClickListener { showEmojiPicker() }
-
-        // CRITICAL FIX: Add click listener for the emoji preview area to open the picker
-        (bind.emojiPreview as? View)?.setOnClickListener { showEmojiPicker() }
+        bind.emojiPreview.setOnClickListener { showEmojiPicker() }
 
         setupReminderSwitch()
     }
 
     private fun setupReminderSwitch() {
-
-        // We use setOnCheckedChangeListener to handle the switch Toggling
         bind.notifySwitch.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                // If reminder is already set (in edit mode), don't show picker again unless tapped
                 if (selectedReminderTimestamp == null || selectedReminderTimestamp == 0L) {
                     showDatePicker()
                 } else {
-                    // Show confirmation of existing time
                     displayReminderTime(selectedReminderTimestamp!!)
                 }
             } else {
@@ -231,60 +232,51 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
 
     private fun showDatePicker() {
         val calendar = Calendar.getInstance()
-        val year = calendar.get(Calendar.YEAR)
-        val month = calendar.get(Calendar.MONTH)
-        val day = calendar.get(Calendar.DAY_OF_MONTH)
-
         val datePickerDialog = DatePickerDialog(
             requireContext(),
-            { _, selectedYear, selectedMonth, selectedDay ->
-                showTimePicker(selectedYear, selectedMonth, selectedDay)
-            },
-            year, month, day
+            { _, year, month, day -> showTimePicker(year, month, day) },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
         )
-
         datePickerDialog.setOnCancelListener {
             bind.notifySwitch.isChecked = false
             resetReminder()
         }
-
         datePickerDialog.datePicker.minDate = System.currentTimeMillis() - 1000
         datePickerDialog.show()
     }
 
     private fun showTimePicker(year: Int, month: Int, day: Int) {
         val calendar = Calendar.getInstance()
-        val hour = calendar.get(Calendar.HOUR_OF_DAY)
-        val minute = calendar.get(Calendar.MINUTE)
-
         val timePickerDialog = TimePickerDialog(
             requireContext(),
-            { _, selectedHour, selectedMinute ->
+            { _, hour, minute ->
                 val finalTime = Calendar.getInstance().apply {
-                    set(year, month, day, selectedHour, selectedMinute, 0)
+                    set(year, month, day, hour, minute, 0)
                 }.timeInMillis
-
                 selectedReminderTimestamp = finalTime
                 displayReminderTime(finalTime)
             },
-            hour, minute, false
+            calendar.get(Calendar.HOUR_OF_DAY),
+            calendar.get(Calendar.MINUTE),
+            false
         )
-
         timePickerDialog.setOnCancelListener {
             bind.notifySwitch.isChecked = false
             resetReminder()
         }
-
         timePickerDialog.show()
     }
 
     private fun displayReminderTime(timestamp: Long) {
         val formattedDate = SimpleDateFormat("MMM dd, yyyy | hh:mm a", Locale.getDefault()).format(timestamp)
-        // Optionally update the UI fields if you have TextViews for the date/time display
-        Toast.makeText(context, "Reminder set for: $formattedDate", Toast.LENGTH_LONG).show()
+        bind.notifydatetime.text = formattedDate
+        bind.notifydatetime.visibility = View.VISIBLE
     }
 
     private fun resetReminder() {
         selectedReminderTimestamp = null
+        bind.notifydatetime.text = "Notifying schedule is not set"
     }
 }

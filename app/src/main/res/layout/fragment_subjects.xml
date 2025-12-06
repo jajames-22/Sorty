@@ -9,21 +9,24 @@
 
     <TextView
         android:id="@+id/homeTitle2"
-        android:layout_width="299dp"
-        android:layout_height="50dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="50dp"
+        android:layout_marginEnd="24dp"
         android:fontFamily="@font/poppins_bold"
+        android:includeFontPadding="false"
         android:text="My Subjects"
         android:textColor="@color/primary_green"
         android:textSize="34sp"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/textView"
-        android:layout_width="320dp"
-        android:layout_height="32dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="32dp"
         android:fontFamily="@font/poppins"
@@ -31,38 +34,23 @@
         android:textColor="@color/primary_green"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/homeTitle2" />
 
-    <ImageView
-        android:id="@+id/imageView2"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="28dp"
-        android:src="@drawable/rectangle_folder"
+    <!-- 👇 THIS IS THE SCROLLER 👇 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewSubjects"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:clipToPadding="false"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="80dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView" />
-
-    <ImageView
-        android:id="@+id/imageView3"
-        android:layout_width="119dp"
-        android:layout_height="89dp"
-        android:src="@drawable/rectangle_folder"
-        app:layout_constraintBottom_toBottomOf="@+id/imageView2"
-        app:layout_constraintStart_toStartOf="@+id/imageView2" />
-
-    <Button
-        android:id="@+id/btn_test_course"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Test Course Activity"
-        android:layout_marginTop="32dp"
-        android:backgroundTint="@color/primary_green"
-        app:layout_constraintTop_toBottomOf="@+id/imageView2"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/addSubjectBtn"
@@ -75,5 +63,27 @@
         app:tint="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
+
+    <ImageView
+        android:id="@+id/emptyFolderIcon"
+        android:layout_width="115dp"
+        android:layout_height="113dp"
+        android:layout_marginTop="180dp"
+        android:src="@drawable/twotone_folder_24"
+        android:tint="@color/grey"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView" />
+
+    <TextView
+        android:id="@+id/emptyFolderText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/poppins"
+        android:text="No subjects, try creating one!"
+        android:textColor="@color/dark_grey"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/emptyFolderIcon" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

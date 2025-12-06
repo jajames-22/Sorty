@@ -19,9 +19,11 @@ class AddNewSubject : BottomSheetDialogFragment() {
 
     private lateinit var bind: AddNewSubjectBinding
 
+    // 👇 1. UPDATE INTERFACE: Add 'subjectDescription' parameter
     interface AddNewSubjectListener {
-        fun onSubjectAdded(subjectName: String, colorHex: String)
+        fun onSubjectAdded(subjectName: String, subjectDescription: String, colorHex: String)
     }
+
     private var listener: AddNewSubjectListener? = null
 
     // Default Color (Red)
@@ -45,22 +47,19 @@ class AddNewSubject : BottomSheetDialogFragment() {
         val folderIcon1 = bind.folderIcon1
         val folderIcon2 = bind.folderIcon2
 
-        // 2. Setup Radio Buttons with Custom Selectors (Color + Border)
+        // 2. Setup Radio Buttons
         setupRadioButton(bind.radioColor1, "#FF8A80") // Red
         setupRadioButton(bind.radioColor2, "#B9F6CA") // Green
         setupRadioButton(bind.radioColor3, "#82B1FF") // Blue
         setupRadioButton(bind.radioColor4, "#FFD180") // Orange
         setupRadioButton(bind.radioColor5, "#EA80FC") // Purple
-
         setupRadioButton(bind.radioColor6, "#80CBC4") // Teal
         setupRadioButton(bind.radioColor7, "#E6EE9C") // Lime
         setupRadioButton(bind.radioColor8, "#CFD8DC") // Blue Grey
         setupRadioButton(bind.radioColor9, "#FFCCBC")
 
-        // Helper function to update folder icons
         fun updateFolderColor(hex: String) {
             val color = Color.parseColor(hex)
-            // MULTIPLY keeps black outlines black, but tints white fills
             folderIcon1.setColorFilter(color, PorterDuff.Mode.MULTIPLY)
             folderIcon2.setColorFilter(color, PorterDuff.Mode.MULTIPLY)
         }
@@ -87,8 +86,16 @@ class AddNewSubject : BottomSheetDialogFragment() {
 
         bind.buttonAdd.setOnClickListener {
             val subjectName = bind.inputSubjectTitle.text.toString().trim()
+
+            // 👇 2. GET DESCRIPTION INPUT
+            val subjectDesc = bind.inputSubjectDesc.text.toString().trim()
+
+            // Optional: Set default text if empty
+            val finalDesc = if (subjectDesc.isEmpty()) "No description" else subjectDesc
+
             if (subjectName.isNotEmpty()) {
-                listener?.onSubjectAdded(subjectName, selectedColorHex)
+                // 👇 3. PASS DESCRIPTION TO LISTENER
+                listener?.onSubjectAdded(subjectName, finalDesc, selectedColorHex)
                 dismiss()
             } else {
                 Toast.makeText(requireContext(), "Subject name can't be empty", Toast.LENGTH_SHORT).show()
@@ -100,40 +107,30 @@ class AddNewSubject : BottomSheetDialogFragment() {
         }
     }
 
-    /**
-     * Creates a circular background with a Border that only appears when selected.
-     */
     private fun setupRadioButton(radioButton: RadioButton, colorHex: String) {
         val colorInt = Color.parseColor(colorHex)
-        val borderColor = Color.parseColor("#414543") // Dark Grey Border
+        val borderColor = Color.parseColor("#414543")
 
-        // Convert 4dp to pixels for the stroke width
         val strokeWidthPx = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            2f,
-            resources.displayMetrics
+            TypedValue.COMPLEX_UNIT_DIP, 2f, resources.displayMetrics
         ).toInt()
 
-        // 1. Create the "Selected" State (Color + Border)
         val checkedDrawable = GradientDrawable().apply {
             shape = GradientDrawable.OVAL
             setColor(colorInt)
-            setStroke(strokeWidthPx, borderColor) // <--- THIS ADDS THE BORDER
+            setStroke(strokeWidthPx, borderColor)
         }
 
-        // 2. Create the "Normal" State (Color Only)
         val uncheckedDrawable = GradientDrawable().apply {
             shape = GradientDrawable.OVAL
             setColor(colorInt)
         }
 
-        // 3. Create a StateListDrawable to handle the switching
         val stateList = StateListDrawable()
         stateList.addState(intArrayOf(android.R.attr.state_checked), checkedDrawable)
         stateList.addState(intArrayOf(), uncheckedDrawable)
 
-        // 4. Apply to the button
-        radioButton.buttonDrawable = null // Hide the default Android radio dot
-        radioButton.background = stateList // Apply our custom circle
+        radioButton.buttonDrawable = null
+        radioButton.background = stateList
     }
 }
