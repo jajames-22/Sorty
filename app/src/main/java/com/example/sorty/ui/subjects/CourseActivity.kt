@@ -477,7 +477,7 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
             loadCourseData()
         } else {
             Snackbar.make(bgSubject, "Update Failed", Snackbar.LENGTH_SHORT)
-                .setBackgroundTint(Color.RED)
+                .setBackgroundTint(Color.BLACK)
                 .setTextColor(Color.WHITE)
                 .show()
         }
