@@ -10,7 +10,7 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.sorty.DatabaseHelper // 👈 CHANGED: Import the unified Helper
+import com.example.sorty.DatabaseHelper
 import com.example.sorty.R
 import com.example.sorty.data.models.Task
 import com.example.sorty.databinding.FragmentHomeBinding
@@ -23,8 +23,6 @@ class HomeFragment : Fragment() {
 
     private lateinit var bind: FragmentHomeBinding
     private lateinit var todoAdapter: TodoAdapter
-
-    // 👇 CHANGED: Renamed variable and type to the unified helper
     private lateinit var dbHelper: DatabaseHelper
 
     // Track the currently active filter (Default to ONGOING)
@@ -41,17 +39,15 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 👇 CHANGED: Initialize the Unified Database Helper
         dbHelper = DatabaseHelper(requireContext())
 
         setupRecyclerView()
         setupListeners()
-        loadTasksFromDatabase() // Load initial tasks based on default filter
+        loadTasksFromDatabase()
     }
 
     // --- Setup RecyclerView and Adapter ---
     private fun showTaskDetails(taskId: Long) {
-        // Perform safety checks before starting a Fragment transaction
         if (isAdded && !childFragmentManager.isStateSaved) {
             val detailFragment = TaskDetailFragment.newInstance(taskId)
             detailFragment.show(childFragmentManager, "TaskDetailSheet")
@@ -61,14 +57,8 @@ class HomeFragment : Fragment() {
     private fun setupRecyclerView() {
         todoAdapter = TodoAdapter(
             tasks = emptyList(),
-
-            onItemClicked = { task ->
-                showTaskDetails(task.id)
-            },
-
-            onCheckboxClicked = { task, isChecked ->
-                updateTaskCompletion(task, isChecked)
-            }
+            onItemClicked = { task -> showTaskDetails(task.id) },
+            onCheckboxClicked = { task, isChecked -> updateTaskCompletion(task, isChecked) }
         )
 
         bind.recyclerViewTodo.apply {
@@ -79,7 +69,6 @@ class HomeFragment : Fragment() {
 
     // --- Database Update Function (Checkbox) ---
     private fun updateTaskCompletion(task: Task, isCompleted: Boolean) {
-        // 👇 CHANGED: Use dbHelper
         val success = dbHelper.updateTaskCompletion(task.id, isCompleted)
 
         if (success) {
@@ -92,15 +81,28 @@ class HomeFragment : Fragment() {
 
     // --- Core Filtering Logic ---
     fun loadTasksFromDatabase() {
-        // 👇 CHANGED: Use dbHelper for all queries
+        // 1. Query the database based on the current filter state
         val tasks = when (currentFilter) {
             TaskFilter.ONGOING -> dbHelper.getOngoingTasks(System.currentTimeMillis())
             TaskFilter.COMPLETED -> dbHelper.getCompletedTasks()
             TaskFilter.MISSED -> dbHelper.getMissedTasks(System.currentTimeMillis())
         }
 
+        // 👇 UPDATED: Toggle Empty State Views Visibility
         if (tasks.isEmpty()) {
-            Toast.makeText(context, "No ${currentFilter.name.lowercase()} tasks found.", Toast.LENGTH_SHORT).show()
+            // Show Empty State
+            bind.emptyNoteIcon.visibility = View.VISIBLE
+            bind.emptyNoteText.visibility = View.VISIBLE
+
+            // Hide RecyclerView (Cleaner look)
+            bind.recyclerViewTodo.visibility = View.GONE
+        } else {
+            // Hide Empty State
+            bind.emptyNoteIcon.visibility = View.GONE
+            bind.emptyNoteText.visibility = View.GONE
+
+            // Show RecyclerView
+            bind.recyclerViewTodo.visibility = View.VISIBLE
         }
 
         todoAdapter.updateTasks(tasks)
@@ -116,24 +118,21 @@ class HomeFragment : Fragment() {
      * Helper function to determine and apply the solid fill color to the filter button.
      */
     private fun applyFilterButtonColor() {
-        // Map status to the corresponding placeholder color resource ID
         val colorResId = when (currentFilter) {
             TaskFilter.ONGOING -> R.color.ongoing_border_fill_placeholder
             TaskFilter.COMPLETED -> R.color.completed_border_fill_placeholder
             TaskFilter.MISSED -> R.color.missed_border_fill_placeholder
         }
 
-        // Get the background drawable and apply the color
         val drawable = bind.filterDropdown.background
         if (drawable is GradientDrawable) {
             val colorInt = ContextCompat.getColor(requireContext(), colorResId)
-            drawable.setColor(colorInt) // Set the SOLID FILL color
+            drawable.setColor(colorInt)
         }
     }
 
-    // --- Button Listeners (Includes FAB and Filter Dropdown) ---
+    // --- Button Listeners ---
     private fun setupListeners() {
-        // FAB Listener
         bind.addNotesBtn.setOnClickListener {
             if (isAdded && !childFragmentManager.isStateSaved) {
                 val bottomSheet = addNotes()
@@ -141,7 +140,6 @@ class HomeFragment : Fragment() {
             }
         }
 
-        // Filter Dropdown Listener
         bind.filterDropdown.setOnClickListener { view ->
             showFilterMenu(view)
         }
@@ -150,7 +148,6 @@ class HomeFragment : Fragment() {
     private fun showFilterMenu(view: View) {
         val popup = PopupMenu(requireContext(), view)
 
-        // Add items to the menu
         popup.menu.apply {
             add(0, 1, 0, "Ongoing")
             add(0, 2, 1, "Completed")

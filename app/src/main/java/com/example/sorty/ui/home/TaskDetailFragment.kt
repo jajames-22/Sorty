@@ -1,5 +1,6 @@
 package com.example.sorty.ui.home
 
+import android.app.AlertDialog // 👈 Import for the Modal
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,13 +9,11 @@ import android.widget.Toast
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.example.sorty.databinding.FragmentTaskDetailBinding
 import com.example.sorty.data.models.Task
-import com.example.sorty.DatabaseHelper // 👈 CHANGED: Import unified helper
+import com.example.sorty.DatabaseHelper
 
 class TaskDetailFragment : BottomSheetDialogFragment() {
 
     private lateinit var bind: FragmentTaskDetailBinding
-
-    // 👇 CHANGED: Renamed variable and type
     private lateinit var dbHelper: DatabaseHelper
 
     private var taskId: Long = -1L
@@ -47,7 +46,6 @@ class TaskDetailFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 👇 CHANGED: Initialize Unified Helper
         dbHelper = DatabaseHelper(requireContext())
 
         loadTaskDetails()
@@ -57,7 +55,6 @@ class TaskDetailFragment : BottomSheetDialogFragment() {
     // --- Data Loading Logic ---
     private fun loadTaskDetails() {
         if (taskId != -1L) {
-            // 👇 CHANGED: Use dbHelper
             currentTask = dbHelper.getTaskById(taskId)
 
             currentTask?.let { task ->
@@ -65,6 +62,11 @@ class TaskDetailFragment : BottomSheetDialogFragment() {
                 bind.detailTaskLabel.text = task.title
                 bind.detailTaskDatetime.text = task.getFormattedDateTime()
 
+                // 👇 NEW: Set Subject Name
+                val subjectName = if (task.category.isNullOrEmpty()) "None" else task.category
+                bind.detailSubjectName.text = "Subject: $subjectName"
+
+                // Description
                 val description = task.content
                 if (description.isNullOrEmpty()) {
                     bind.detailDescriptionDisplay.text = "No Description"
@@ -80,29 +82,48 @@ class TaskDetailFragment : BottomSheetDialogFragment() {
         }
     }
 
-    // --- Button Listeners (Delete and Edit) ---
     private fun setupListeners() {
         bind.detailEditBtn.setOnClickListener {
             openEditMode()
         }
 
         bind.detailDeleteBtn.setOnClickListener {
-            deleteTask()
+            // 👇 Show Modal instead of deleting immediately
+            showDeleteConfirmation()
         }
+    }
+
+    // 👇 NEW: Confirmation Modal Logic
+    private fun showDeleteConfirmation() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Delete Note")
+            .setMessage("Are you sure you want to delete this note?")
+            .setPositiveButton("Delete") { dialog, _ ->
+                deleteTask() // Call the actual delete function if confirmed
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
     }
 
     private fun deleteTask() {
         currentTask?.let { task ->
-            // 👇 CHANGED: Use dbHelper
             val success = dbHelper.deleteTask(task.id)
 
             if (success) {
                 // Inform the HomeFragment to refresh the list
                 (parentFragment as? HomeFragment)?.loadTasksFromDatabase()
-                Toast.makeText(context, "Task '${task.title}' deleted.", Toast.LENGTH_SHORT).show()
+
+                // Inform CourseActivity to refresh if opened from there
+                // (Note: This assumes your Activity is named CourseActivity if you are reusing this fragment there)
+                // (activity as? com.example.sorty.ui.subjects.CourseActivity)?.loadCourseTasks()
+
+                Toast.makeText(context, "To-Do deleted", Toast.LENGTH_SHORT).show()
                 dismiss()
             } else {
-                Toast.makeText(context, "Failed to delete task.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Failed to delete to-do.", Toast.LENGTH_SHORT).show()
             }
         }
     }

@@ -1,6 +1,6 @@
 package com.example.sorty.ui.subjects
 
-import android.content.Intent // 👈 IMPORT THIS
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -45,18 +45,24 @@ class SubjectsFragment : Fragment(), AddNewSubject.AddNewSubjectListener {
         }
     }
 
+    // 👇 Refresh list when returning from CourseActivity (in case of edits/deletes there)
+    override fun onResume() {
+        super.onResume()
+        loadSubjects()
+    }
+
     private fun setupRecyclerView() {
         // Initialize adapter
         adapter = SubjectsAdapter(emptyList()) { selectedSubject ->
 
-            // 👇 LOGIC TO OPEN COURSE ACTIVITY 👇
+            // 👇 LOGIC TO OPEN COURSE ACTIVITY
             val intent = Intent(requireContext(), CourseActivity::class.java)
 
             // Pass data to the next screen
             intent.putExtra("COURSE_ID", selectedSubject.id)
             intent.putExtra("COURSE_NAME", selectedSubject.name)
             intent.putExtra("COURSE_DESC", selectedSubject.description)
-            intent.putExtra("COURSE_COLOR", selectedSubject.color) // Optional: Pass color if you want to theme the next page
+            intent.putExtra("COURSE_COLOR", selectedSubject.color)
 
             startActivity(intent)
         }
@@ -81,10 +87,10 @@ class SubjectsFragment : Fragment(), AddNewSubject.AddNewSubjectListener {
         }
     }
 
-    // Update the override function signature:
-    override fun onSubjectAdded(subjectName: String, subjectDescription: String, colorHex: String) {
+    // --- LISTENER IMPLEMENTATIONS ---
 
-        // Pass the description to the database
+    // 1. Handle Add
+    override fun onSubjectAdded(subjectName: String, subjectDescription: String, colorHex: String) {
         val success = dbHelper.insertSubject(subjectName, subjectDescription, colorHex)
 
         if (success) {
@@ -92,6 +98,24 @@ class SubjectsFragment : Fragment(), AddNewSubject.AddNewSubjectListener {
             loadSubjects()
         } else {
             Toast.makeText(requireContext(), "Failed to add subject", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // 2. 👇 FIXED: Handle Update (Required by Interface)
+    override fun onSubjectUpdated(id: Int, subjectName: String, subjectDescription: String, colorHex: String) {
+        val success = dbHelper.updateSubject(id, subjectName, subjectDescription, colorHex)
+        if (success) {
+            Toast.makeText(requireContext(), "Subject Updated!", Toast.LENGTH_SHORT).show()
+            loadSubjects()
+        }
+    }
+
+    // 3. 👇 FIXED: Handle Delete (Required by Interface)
+    override fun onSubjectDeleted(id: Int) {
+        val success = dbHelper.deleteSubject(id)
+        if (success) {
+            Toast.makeText(requireContext(), "Subject Deleted!", Toast.LENGTH_SHORT).show()
+            loadSubjects()
         }
     }
 }

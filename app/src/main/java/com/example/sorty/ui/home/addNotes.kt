@@ -10,12 +10,13 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import android.widget.Toast
-import com.example.sorty.DatabaseHelper // 👈 Import the Unified Helper
+import com.example.sorty.DatabaseHelper
 import com.example.sorty.R
 import com.example.sorty.data.models.Task
 import com.example.sorty.databinding.ActivityAddNotesBinding
 import com.example.sorty.ui.home.addNotesFiles.EmojiPickerFragment
 import com.example.sorty.ui.home.addNotesFiles.EmojiSelectedListener
+import com.example.sorty.ui.subjects.CourseActivity // 👈 IMPORT THIS
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -26,8 +27,6 @@ import java.util.Locale
 class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
 
     private lateinit var bind: ActivityAddNotesBinding
-
-    // 👇 CHANGED: Use the unified DatabaseHelper
     private lateinit var dbHelper: DatabaseHelper
 
     private var selectedReminderTimestamp: Long? = null
@@ -51,15 +50,12 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
         super.onCreate(savedInstanceState)
         isCancelable = false
         taskIdToEdit = arguments?.getLong(ARG_TASK_ID) ?: 0L
-
-        // 👇 INITIALIZE: The unified helper
         dbHelper = DatabaseHelper(requireContext())
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState) as BottomSheetDialog
         dialog.setOnShowListener {
-            // "Magic Fix" for Bottom Sheet ID
             val bottomSheetId = resources.getIdentifier("design_bottom_sheet", "id", "com.google.android.material")
             if (bottomSheetId != 0) {
                 val bottomSheet = dialog.findViewById<View>(bottomSheetId)
@@ -85,30 +81,28 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
         super.onViewCreated(view, savedInstanceState)
 
         setupSubjectDropdown()
-
-        // Set default text
         bind.notifydatetime.text = "Notifying schedule is not set"
 
         if (taskIdToEdit != 0L) {
             loadExistingTask(taskIdToEdit!!)
         } else {
             updateEmojiPreview(selectedEmoji)
+
+            // Check if we passed a preset subject (from CourseActivity)
+            val presetSubject = arguments?.getString("arg_preset_subject")
+            if (!presetSubject.isNullOrEmpty()) {
+                bind.autoCompleteSubject.setText(presetSubject, false)
+            }
         }
 
         setupListeners()
     }
 
     private fun setupSubjectDropdown() {
-        // 👇 1. FETCH FROM DATABASE: Get all subjects
         val subjectList = dbHelper.getAllSubjects()
-
-        // 👇 2. EXTRACT NAMES: Convert to a list of strings
         val subjectNames = subjectList.map { it.name }.toMutableList()
-
-        // 👇 3. ADD "None" as the first option
         subjectNames.add(0, "None")
 
-        // 👇 4. SETUP ADAPTER
         val adapter = ArrayAdapter(requireContext(), R.layout.dropdown_item, subjectNames)
         bind.autoCompleteSubject.setAdapter(adapter)
         bind.autoCompleteSubject.setDropDownBackgroundResource(R.color.white)
@@ -116,7 +110,6 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
     }
 
     private fun loadExistingTask(taskId: Long) {
-        // 👇 CHANGED: Use dbHelper
         val existingTask = dbHelper.getTaskById(taskId)
 
         existingTask?.let { task ->
@@ -180,9 +173,7 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
                 isCompleted = taskIsCompleted,
                 emojiIcon = emoji
             )
-            // 👇 CHANGED: Use dbHelper
             val success = dbHelper.updateFullTask(updatedTask)
-
             if (success) Toast.makeText(context, "Note Updated", Toast.LENGTH_SHORT).show()
             else Toast.makeText(context, "Error updating task!", Toast.LENGTH_SHORT).show()
 
@@ -196,14 +187,19 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
                 isCompleted = false,
                 emojiIcon = emoji
             )
-            // 👇 CHANGED: Use dbHelper
             val success = dbHelper.insertTask(newTask)
-
             if (success) Toast.makeText(context, "Note Added", Toast.LENGTH_SHORT).show()
             else Toast.makeText(context, "Error saving task!", Toast.LENGTH_SHORT).show()
         }
 
+        // 👇 REFRESH LOGIC 👇
+
+        // 1. If called from HomeFragment (Fragment)
         (parentFragment as? HomeFragment)?.loadTasksFromDatabase()
+
+        // 2. If called from CourseActivity (Activity)
+        (activity as? CourseActivity)?.loadCourseTasks()
+
         dismiss()
     }
 
@@ -278,5 +274,6 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
     private fun resetReminder() {
         selectedReminderTimestamp = null
         bind.notifydatetime.text = "Notifying schedule is not set"
+        bind.notifydatetime.visibility = View.GONE
     }
 }

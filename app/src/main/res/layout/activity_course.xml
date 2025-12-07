@@ -2,11 +2,12 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/bg_subject"
     android:layout_width="match_parent"
-    android:id="@+id/main"
     android:layout_height="match_parent"
     android:background="@color/primary_green">
 
+    <!-- HEADER & TABS SECTION (Keep Unchanged) -->
     <ImageView
         android:id="@+id/bgsubject"
         android:layout_width="0dp"
@@ -27,8 +28,7 @@
         android:background="?attr/selectableItemBackgroundBorderless"
         android:src="@drawable/ic_back_arrow"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="ContentDescription" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tv_subject_name"
@@ -38,7 +38,6 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="8dp"
         android:fontFamily="@font/poppins"
-        android:includeFontPadding="false"
         android:text="Subject Name"
         android:textColor="@color/black_text"
         android:textSize="28sp"
@@ -54,7 +53,6 @@
         android:layout_marginEnd="16dp"
         android:background="@drawable/bg_edit_button"
         android:fontFamily="@font/poppins"
-        android:includeFontPadding="false"
         android:paddingHorizontal="12dp"
         android:paddingVertical="6dp"
         android:text="Edit Course"
@@ -74,7 +72,7 @@
         android:fontFamily="@font/poppins"
         android:includeFontPadding="false"
         android:padding="12dp"
-        android:text="Short description of the course goes here."
+        android:text="Description goes here."
         android:textColor="@color/grey_text"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="@id/btn_edit_course"
@@ -103,7 +101,7 @@
             android:includeFontPadding="false"
             android:paddingVertical="8dp"
             android:text="To-do"
-            android:textColor="@color/black_text"
+            android:textColor="@color/white"
             android:textStyle="bold" />
 
         <TextView
@@ -122,7 +120,7 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-
+    <!-- TO-DO CONTENT AREA -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layout_content_todo"
         android:layout_width="match_parent"
@@ -142,7 +140,6 @@
             android:drawablePadding="8dp"
             android:fontFamily="@font/poppins"
             android:gravity="center_vertical"
-            android:includeFontPadding="false"
             android:paddingHorizontal="12dp"
             android:paddingVertical="6dp"
             android:text="Ongoing"
@@ -151,25 +148,39 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_add_todo"
-            android:layout_width="112dp"
+            android:layout_width="wrap_content"
             android:layout_height="35dp"
             android:layout_marginEnd="16dp"
             android:backgroundTint="@color/primary_green"
-            android:drawableStart="@drawable/baseline_add_24"
-            android:drawableTint="@android:color/white"
             android:fontFamily="@font/poppins"
-            android:includeFontPadding="false"
             android:insetTop="0dp"
             android:insetBottom="0dp"
-            android:paddingHorizontal="16dp"
             android:text="To-do"
+            android:textAllCaps="false"
             android:textColor="@color/white"
-            app:iconPadding="8dp"
+            app:cornerRadius="10dp"
+            app:icon="@drawable/baseline_add_24"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconTint="@color/white"
             app:layout_constraintBottom_toBottomOf="@id/tv_filter_ongoing"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/tv_filter_ongoing" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_todo_list"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="16dp"
+            android:clipToPadding="false"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_filter_ongoing" />
 
         <LinearLayout
             android:id="@+id/layout_empty_state"
@@ -187,8 +198,7 @@
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:src="@drawable/ic_clipboard_empty"
-                app:tint="@color/grey_border"
-                tools:ignore="ContentDescription" />
+                app:tint="@color/grey_border" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -202,15 +212,54 @@
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- 👇 UPDATED FILES CONTENT AREA 👇 -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layout_content_files"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:visibility="gone"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tabs_container">
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_add_file"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="16dp"
+            android:backgroundTint="@color/primary_green"
+            android:fontFamily="@font/poppins"
+            android:includeFontPadding="false"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="Add file"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            app:cornerRadius="10dp"
+            app:icon="@drawable/baseline_add_24"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconTint="@color/white"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- 👇 ADDED RECYCLER VIEW FOR FILES 👇 -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_files_list"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="16dp"
+            android:clipToPadding="false"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btn_add_file" />
+
+        <!-- EMPTY STATE FOR FILES -->
         <LinearLayout
+            android:id="@+id/layout_files_empty_state"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
@@ -218,14 +267,13 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toBottomOf="@id/btn_add_file">
 
             <ImageView
                 android:id="@+id/iv_file_empty"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:src="@drawable/ic_file_empty"
-                tools:ignore="ContentDescription" />
+                android:src="@drawable/ic_file_empty" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -236,21 +284,6 @@
                 android:textColor="@color/black_text"
                 android:textSize="18sp"
                 android:textStyle="normal" />
-
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/btn_add_file"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/bg_button_yellow_border"
-                android:drawableStart="@drawable/ic_add_black"
-                android:drawablePadding="8dp"
-                android:fontFamily="@font/poppins"
-                android:paddingHorizontal="24dp"
-                android:text="File"
-                android:textAllCaps="false"
-                android:textColor="@color/black_text"
-                android:textSize="16sp" />
 
         </LinearLayout>
 

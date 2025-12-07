@@ -28,22 +28,15 @@ import com.yalantis.ucrop.UCrop
 class InsertPicture : AppCompatActivity() {
 
     private lateinit var bind: ActivityInsertPictureBinding
-    private lateinit var sessionManager: SessionManager // Declaration of the Session Manager
+    private lateinit var sessionManager: SessionManager
 
-    // Variable to hold the final (cropped) image URI
     private var selectedImageUri: Uri? = null
 
-    // ---------------------------------------------------------
-    // A. The Cropper Launcher
-    // ---------------------------------------------------------
     private val cropImageLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK && result.data != null) {
             val resultUri = UCrop.getOutput(result.data!!)
             if (resultUri != null) {
-                // 1. Store the cropped URI to the state variable
                 selectedImageUri = resultUri
-
-                // 2. Display the image in the preview
                 bind.profileImagePreview.setImageURI(resultUri)
                 bind.profileImagePreview.imageTintList = null
             }
@@ -53,12 +46,8 @@ class InsertPicture : AppCompatActivity() {
         }
     }
 
-    // ---------------------------------------------------------
-    // B. The Photo Picker Launcher
-    // ---------------------------------------------------------
     private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
-            // Initiate the cropping process immediately
             startCrop(uri)
         } else {
             Toast.makeText(this, "No image selected", Toast.LENGTH_SHORT).show()
@@ -72,12 +61,13 @@ class InsertPicture : AppCompatActivity() {
         bind = ActivityInsertPictureBinding.inflate(layoutInflater)
         setContentView(bind.root)
 
-        sessionManager = SessionManager(this) // Instantiation of the Session Manager
+        sessionManager = SessionManager(this)
 
         val windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
         windowInsetsController.isAppearanceLightStatusBars = false
 
-        ViewCompat.setOnApplyWindowInsetsListener(bind.main) { v, insets ->
+        // 👇 FIXED: Changed 'bind.main' to 'bind.root'
+        ViewCompat.setOnApplyWindowInsetsListener(bind.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
@@ -96,7 +86,6 @@ class InsertPicture : AppCompatActivity() {
         }
 
         bind.buttonContinue2.setOnClickListener {
-            // Retrieve data passed from the previous Activity
             val firstName = intent.getStringExtra("EXTRA_FIRST") ?: ""
             val lastName = intent.getStringExtra("EXTRA_LAST") ?: ""
             val bday = intent.getStringExtra("EXTRA_BDAY") ?: ""
@@ -106,21 +95,15 @@ class InsertPicture : AppCompatActivity() {
 
             val imageUriString = selectedImageUri?.toString() ?: ""
 
-            // NOTE: DatabaseHelper(this) and db.insertUser must be implemented separately.
-            // val db = DatabaseHelper(this)
-            // val success = db.insertUser(firstName, lastName, bday, email, school, course, imageUriString)
-
-            // Assume the database insertion is successful for demonstrating the session logic
-            val success = true
+            // 👇 ENABLED DATABASE SAVING
+            val db = DatabaseHelper(this)
+            val success = db.insertUser(firstName, lastName, bday, email, school, course, imageUriString)
 
             if (success) {
-                // STEP 1: Set the login flag to true to maintain the session
                 sessionManager.setLogin(true)
-
                 Toast.makeText(this, "Account Created Successfully!", Toast.LENGTH_SHORT).show()
 
-                // STEP 2: Redirect to the Home Activity and clear the activity back stack
-                val homeIntent = Intent(this, Home::class.java) // Ensure 'HomeActivity' is the correct class name
+                val homeIntent = Intent(this, Home::class.java)
                 homeIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(homeIntent)
             } else {
@@ -129,9 +112,6 @@ class InsertPicture : AppCompatActivity() {
         }
     }
 
-    // ---------------------------------------------------------
-    // C. Helper Function to configure and start uCrop
-    // ---------------------------------------------------------
     private fun startCrop(uri: Uri) {
         val destinationFileName = "cropped_${System.currentTimeMillis()}.jpg"
         val destinationUri = Uri.fromFile(File(cacheDir, destinationFileName))
@@ -141,7 +121,6 @@ class InsertPicture : AppCompatActivity() {
         options.setShowCropGrid(false)
         options.setCompressionQuality(90)
 
-        // Configuration for the uCrop UI colors
         options.setStatusBarColor(getColor(R.color.primary_green))
         options.setToolbarColor(getColor(R.color.primary_green))
         options.setToolbarWidgetColor(getColor(R.color.white))

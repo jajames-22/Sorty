@@ -5,12 +5,15 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import com.example.sorty.data.models.Task     // Ensure this import exists
-import com.example.sorty.ui.subjects.Subject  // Ensure this import exists
 
-// 1. Update Version to 4
+// Ensure these imports are correct based on your project structure
+import com.example.sorty.data.models.Task
+import com.example.sorty.ui.subjects.Subject
+import com.example.sorty.data.models.SubjectFile // 👈 RENAMED FROM 'File' TO 'SubjectFile' TO FIX CONFLICTS
+
+// 1. Database Version is 5
 class DatabaseHelper(context: Context) :
-    SQLiteOpenHelper(context, "sorty.db", null, 4) {
+    SQLiteOpenHelper(context, "sorty.db", null, 5) {
 
     companion object {
         // Task Table Constants
@@ -19,13 +22,21 @@ class DatabaseHelper(context: Context) :
         const val COL_TITLE = "title"
         const val COL_CONTENT = "content"
         const val COL_DUE_DATE = "due_date"
-        const val COL_CATEGORY = "category" // This stores the Subject Name
+        const val COL_CATEGORY = "category"
         const val COL_IS_COMPLETED = "is_completed"
         const val COL_EMOJI_ICON = "emoji_icon"
+
+        // File Table Constants
+        const val TABLE_FILES = "files"
+        const val COL_FILE_ID = "id"
+        const val COL_FILE_NAME = "name"
+        const val COL_FILE_URI = "uri"
+        const val COL_FILE_TYPE = "type"
+        const val COL_FILE_SUBJECT = "subject_name"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
-        // --- 1. Create Users Table ---
+        // 1. Users Table
         db.execSQL(
             """
             CREATE TABLE users (
@@ -41,11 +52,14 @@ class DatabaseHelper(context: Context) :
             """
         )
 
-        // --- 2. Create Subjects Table ---
+        // 2. Subjects Table
         createSubjectsTable(db)
 
-        // --- 3. Create Tasks Table ---
+        // 3. Tasks Table
         createTasksTable(db)
+
+        // 4. Files Table
+        createFilesTable(db)
     }
 
     private fun createSubjectsTable(db: SQLiteDatabase) {
@@ -77,23 +91,29 @@ class DatabaseHelper(context: Context) :
         )
     }
 
+    private fun createFilesTable(db: SQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE $TABLE_FILES (
+                $COL_FILE_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COL_FILE_NAME TEXT,
+                $COL_FILE_URI TEXT,
+                $COL_FILE_TYPE TEXT,
+                $COL_FILE_SUBJECT TEXT
+            );
+            """
+        )
+    }
+
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // Migration logic for Users
         if (oldVersion < 2) {
             db.execSQL("DROP TABLE IF EXISTS users")
             onCreate(db)
             return
         }
-
-        // Migration logic for Subjects (Added in v3)
-        if (oldVersion < 3) {
-            createSubjectsTable(db)
-        }
-
-        // Migration logic for Tasks (Added in v4)
-        if (oldVersion < 4) {
-            createTasksTable(db)
-        }
+        if (oldVersion < 3) createSubjectsTable(db)
+        if (oldVersion < 4) createTasksTable(db)
+        if (oldVersion < 5) createFilesTable(db)
     }
 
     // ==========================================
@@ -146,33 +166,53 @@ class DatabaseHelper(context: Context) :
         return subjectList
     }
 
+    fun deleteFile(fileId: Long): Boolean {
+        val db = writableDatabase
+        val result = db.delete(TABLE_FILES, "$COL_FILE_ID = ?", arrayOf(fileId.toString()))
+        return result > 0
+    }
+
     fun getSubjectById(id: Int): Subject? {
         val db = readableDatabase
         val cursor = db.rawQuery("SELECT * FROM subjects WHERE id = ?", arrayOf(id.toString()))
-
         var subject: Subject? = null
         if (cursor.moveToFirst()) {
             val name = cursor.getString(cursor.getColumnIndexOrThrow("name"))
             val desc = cursor.getString(cursor.getColumnIndexOrThrow("description"))
             val color = cursor.getString(cursor.getColumnIndexOrThrow("color"))
-
             subject = Subject(id, name, desc, color)
         }
         cursor.close()
         return subject
     }
 
-    // ==========================================
-    // TASK FUNCTIONS (Integrated from TaskDatabaseHelper)
-    // ==========================================
+    fun updateSubject(id: Int, name: String, description: String, color: String): Boolean {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("name", name)
+            put("description", description)
+            put("color", color)
+        }
+        val result = db.update("subjects", values, "id=?", arrayOf(id.toString()))
+        return result > 0
+    }
 
+    fun deleteSubject(id: Int): Boolean {
+        val db = writableDatabase
+        val result = db.delete("subjects", "id=?", arrayOf(id.toString()))
+        return result > 0
+    }
+
+    // ==========================================
+    // TASK FUNCTIONS
+    // ==========================================
     fun insertTask(task: Task): Boolean {
         val db = writableDatabase
         val values = ContentValues().apply {
             put(COL_TITLE, task.title)
             put(COL_CONTENT, task.content)
             put(COL_DUE_DATE, task.dueDate)
-            put(COL_CATEGORY, task.category) // Stores the Subject Name
+            put(COL_CATEGORY, task.category)
             put(COL_IS_COMPLETED, if (task.isCompleted) 1 else 0)
             put(COL_EMOJI_ICON, task.emojiIcon)
         }
@@ -190,8 +230,8 @@ class DatabaseHelper(context: Context) :
             put(COL_IS_COMPLETED, if (task.isCompleted) 1 else 0)
             put(COL_EMOJI_ICON, task.emojiIcon)
         }
-        val rowsAffected = db.update(TABLE_TASKS, values, "$COL_ID = ?", arrayOf(task.id.toString()))
-        return rowsAffected > 0
+        val result = db.update(TABLE_TASKS, values, "$COL_ID = ?", arrayOf(task.id.toString()))
+        return result > 0
     }
 
     fun updateTaskCompletion(taskId: Long, isCompleted: Boolean): Boolean {
@@ -199,8 +239,8 @@ class DatabaseHelper(context: Context) :
         val values = ContentValues().apply {
             put(COL_IS_COMPLETED, if (isCompleted) 1 else 0)
         }
-        val rowsAffected = db.update(TABLE_TASKS, values, "$COL_ID = ?", arrayOf(taskId.toString()))
-        return rowsAffected > 0
+        val result = db.update(TABLE_TASKS, values, "$COL_ID = ?", arrayOf(taskId.toString()))
+        return result > 0
     }
 
     fun getTaskById(taskId: Long): Task? {
@@ -232,12 +272,46 @@ class DatabaseHelper(context: Context) :
 
     fun deleteTask(taskId: Long): Boolean {
         val db = writableDatabase
-        val rowsAffected = db.delete(TABLE_TASKS, "$COL_ID = ?", arrayOf(taskId.toString()))
-        return rowsAffected > 0
+        val result = db.delete(TABLE_TASKS, "$COL_ID = ?", arrayOf(taskId.toString()))
+        return result > 0
+    }
+
+    // ==========================================
+    // FILE FUNCTIONS
+    // ==========================================
+    fun insertFile(fileName: String, fileUri: String, fileType: String, subjectName: String): Boolean {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COL_FILE_NAME, fileName)
+            put(COL_FILE_URI, fileUri)
+            put(COL_FILE_TYPE, fileType)
+            put(COL_FILE_SUBJECT, subjectName)
+        }
+        val result = db.insert(TABLE_FILES, null, values)
+        return result != -1L
+    }
+
+    fun getFilesForSubject(subjectName: String): List<SubjectFile> { // 👈 Updated to SubjectFile
+        val fileList = ArrayList<SubjectFile>()
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM $TABLE_FILES WHERE $COL_FILE_SUBJECT = ? ORDER BY $COL_FILE_ID DESC", arrayOf(subjectName))
+
+        if (cursor.moveToFirst()) {
+            do {
+                val id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_FILE_ID))
+                val name = cursor.getString(cursor.getColumnIndexOrThrow(COL_FILE_NAME))
+                val uri = cursor.getString(cursor.getColumnIndexOrThrow(COL_FILE_URI))
+                val type = cursor.getString(cursor.getColumnIndexOrThrow(COL_FILE_TYPE))
+                val subject = cursor.getString(cursor.getColumnIndexOrThrow(COL_FILE_SUBJECT))
+
+                fileList.add(SubjectFile(id, name, uri, type, subject))
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return fileList
     }
 
     // --- Helpers ---
-
     private fun filterTasks(query: String): List<Task> {
         val tasks = mutableListOf<Task>()
         val db = readableDatabase
