@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import com.example.sorty.data.models.Task
 import com.example.sorty.ui.subjects.Subject
 import com.example.sorty.data.models.SubjectFile // 👈 RENAMED FROM 'File' TO 'SubjectFile' TO FIX CONFLICTS
+import com.example.sorty.data.models.User
 
 // 1. Database Version is 5
 class DatabaseHelper(context: Context) :
@@ -132,6 +133,52 @@ class DatabaseHelper(context: Context) :
         }
         val result = db.insert("users", null, values)
         return result != -1L
+    }
+
+    // ==========================================
+    // USER FUNCTIONS (Add this below insertUser)
+    // ==========================================
+
+    fun getUser(): User? {
+        val db = readableDatabase
+        // We select the first user found (since this is a personal app)
+        val cursor = db.rawQuery("SELECT * FROM users LIMIT 1", null)
+
+        var user: User? = null
+
+        if (cursor.moveToFirst()) {
+            val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
+            val firstName = cursor.getString(cursor.getColumnIndexOrThrow("first_name"))
+            val lastName = cursor.getString(cursor.getColumnIndexOrThrow("last_name"))
+            val birthday = cursor.getString(cursor.getColumnIndexOrThrow("birthday"))
+            val email = cursor.getString(cursor.getColumnIndexOrThrow("email"))
+            val school = cursor.getString(cursor.getColumnIndexOrThrow("school"))
+            val course = cursor.getString(cursor.getColumnIndexOrThrow("course"))
+            val imageUri = cursor.getString(cursor.getColumnIndexOrThrow("image_uri"))
+
+            user = User(id, firstName, lastName, birthday, email, school, course, imageUri)
+        }
+        cursor.close()
+        return user
+    }
+
+    // ==========================================
+    // ADD THIS FUNCTION TO UPDATE USER INFO
+    // ==========================================
+    fun updateUser(id: Int, firstName: String, lastName: String, birthday: String, email: String, school: String, course: String, imageUri: String): Boolean {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("first_name", firstName)
+            put("last_name", lastName)
+            put("birthday", birthday)
+            put("email", email)
+            put("school", school)
+            put("course", course)
+            put("image_uri", imageUri)
+        }
+        // Updates the user row where ID matches
+        val result = db.update("users", values, "id=?", arrayOf(id.toString()))
+        return result > 0
     }
 
     // ==========================================
