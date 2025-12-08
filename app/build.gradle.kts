@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.cardview)
     implementation("com.google.android.material:material:1.12.0")
+    implementation("com.google.android.material:material:1.11.0")
 
     // --- ADD THIS LINE HERE ---
     implementation("com.github.yalantis:ucrop:2.2.8")
