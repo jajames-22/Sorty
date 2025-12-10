@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/primary_green"
+    android:padding="24dp">
+
+    <!-- Title / Instruction -->
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="75dp"
+        android:fontFamily="@font/poppins_bold"
+        android:text="Set up PIN"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvSubtitle"
+        android:layout_width="316dp"
+        android:layout_height="42dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="24dp"
+        android:fontFamily="@font/poppins"
+        android:gravity="center"
+        android:text="Create a 4-digit passcode to secure your notes"
+        android:textColor="#E0E0E0"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvTitle" />
+
+    <!-- The 4 Dots Indicators -->
+    <LinearLayout
+        android:id="@+id/dotsContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvSubtitle">
+
+        <ImageView
+            android:id="@+id/dot1"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_margin="12dp"
+            android:src="@drawable/bg_pin_dot_off" />
+
+        <ImageView
+            android:id="@+id/dot2"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_margin="12dp"
+            android:src="@drawable/bg_pin_dot_off" />
+
+        <ImageView
+            android:id="@+id/dot3"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_margin="12dp"
+            android:src="@drawable/bg_pin_dot_off" />
+
+        <ImageView
+            android:id="@+id/dot4"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_margin="12dp"
+            android:src="@drawable/bg_pin_dot_off" />
+    </LinearLayout>
+
+    <!-- Keypad Grid -->
+    <GridLayout
+        android:id="@+id/keypadGrid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:columnCount="3"
+        android:rowCount="4"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dotsContainer">
+
+        <!-- Row 1 -->
+        <Button
+            style="@style/PinButtonStyle"
+            android:background="@drawable/bg_numpad_circle"
+            android:includeFontPadding="false"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="1"
+            app:backgroundTint="@null" />
+
+        <Button
+            style="@style/PinButtonStyle"
+            android:background="@drawable/bg_numpad_circle"
+            android:includeFontPadding="false"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="2"
+            app:backgroundTint="@null" />
+
+        <Button
+            style="@style/PinButtonStyle"
+            android:background="@drawable/bg_numpad_circle"
+            android:includeFontPadding="false"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="3"
+            app:backgroundTint="@null" />
+
+        <!-- Row 2 -->
+        <Button
+            style="@style/PinButtonStyle"
+            android:background="@drawable/bg_numpad_circle"
+            android:includeFontPadding="false"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="4"
+            app:backgroundTint="@null" />
+
+        <Button
+            style="@style/PinButtonStyle"
+            android:background="@drawable/bg_numpad_circle"
+            android:includeFontPadding="false"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="5"
+            app:backgroundTint="@null" />
+
+        <Button
+            style="@style/PinButtonStyle"
+            android:background="@drawable/bg_numpad_circle"
+            android:includeFontPadding="false"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="6"
+            app:backgroundTint="@null" />
+
+        <!-- Row 3 -->
+        <Button
+            style="@style/PinButtonStyle"
+            android:background="@drawable/bg_numpad_circle"
+            android:includeFontPadding="false"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="7"
+            app:backgroundTint="@null" />
+
+        <Button
+            style="@style/PinButtonStyle"
+            android:background="@drawable/bg_numpad_circle"
+            android:includeFontPadding="false"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="8"
+            app:backgroundTint="@null" />
+
+        <Button
+            style="@style/PinButtonStyle"
+            android:background="@drawable/bg_numpad_circle"
+            android:includeFontPadding="false"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="9"
+            app:backgroundTint="@null" />
+
+        <!-- Row 4 -->
+        <View
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_margin="12dp" />
+
+        <Button
+            style="@style/PinButtonStyle"
+            android:background="@drawable/bg_numpad_circle"
+            android:includeFontPadding="false"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:text="0"
+            app:backgroundTint="@null" />
+
+        <ImageButton
+            android:id="@+id/btnBackspace"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_margin="12dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Backspace"
+            android:scaleType="center"
+            android:src="@drawable/baseline_backspace_24"
+            app:tint="@color/white" />
+
+    </GridLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

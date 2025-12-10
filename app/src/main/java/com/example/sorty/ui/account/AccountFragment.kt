@@ -9,6 +9,8 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.sorty.DatabaseHelper
 import com.example.sorty.databinding.FragmentAccountBinding
+import android.content.Intent
+import com.example.sorty.ui.account.SetupPinActivity
 
 class AccountFragment : Fragment() {
 
@@ -72,8 +74,8 @@ class AccountFragment : Fragment() {
     private fun setupButtons() {
         // Setup Password Button
         bind.btnSetupPassword.setOnClickListener {
-            Toast.makeText(requireContext(), "Setup Password Clicked", Toast.LENGTH_SHORT).show()
-            // TODO: Navigate to Password Setup Screen
+            val intent = Intent(requireContext(), com.example.sorty.ui.account.SetupPinActivity::class.java)
+            startActivity(intent)
         }
 
         // Reset Account Button

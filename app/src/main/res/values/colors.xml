@@ -21,5 +21,7 @@
     <color name="grey_text">#757575</color>
     <color name="light_grey">#F5F5F5</color>
     <color name="grey_border">#BDBDBD</color>
+    <color name="transparent_black">#1B3B26</color>
+>
 
 </resources>

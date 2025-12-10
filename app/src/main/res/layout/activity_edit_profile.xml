@@ -4,54 +4,62 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F2F5F8"
+    android:background="#FFFFFF"
     tools:context=".ui.account.EditProfileActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/header_container"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:paddingTop="24dp"
-        android:paddingBottom="16dp"
         android:background="#FFFFFF"
         android:elevation="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="16dp"
+            android:fontFamily="@font/poppins_bold"
+            android:includeFontPadding="false"
+            android:text="Edit Profile"
+            android:textColor="@color/primary_green"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageButton
             android:id="@+id/btn_back"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="16dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/baseline_arrow_back_24"
-            app:tint="@color/primary_green"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
-
-        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Edit Profile"
-            android:fontFamily="@font/poppins_bold"
-            android:textSize="20sp"
-            android:textColor="@color/primary_green"
+            android:layout_marginStart="16dp"
+            android:backgroundTint="@color/transparent"
+            android:scaleType="fitCenter"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            app:srcCompat="@drawable/baseline_arrow_back_24"
+            app:tint="@color/primary_green" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:fillViewport="true"
-        app:layout_constraintTop_toBottomOf="@id/header_container"
-        app:layout_constraintBottom_toTopOf="@id/btn_save_changes">
+        app:layout_constraintBottom_toTopOf="@id/btn_save_changes"
+        app:layout_constraintTop_toBottomOf="@id/header_container">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="#F7F9FF"
             android:orientation="vertical"
             android:paddingBottom="40dp">
 
@@ -60,9 +68,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="24dp"
                 android:layout_marginTop="24dp"
-                android:text="ID Preview"
                 android:fontFamily="@font/poppins_bold"
-                android:textColor="@color/grey_text"/>
+                android:text="ID Preview"
+                android:textColor="@color/grey_text" />
 
             <androidx.cardview.widget.CardView
                 android:id="@+id/card_virtual_id"
@@ -85,8 +93,8 @@
                         android:layout_height="50dp"
                         android:layout_marginTop="24dp"
                         android:layout_marginEnd="24dp"
-                        android:src="@drawable/sorty_logo"
                         android:scaleType="fitCenter"
+                        android:src="@drawable/sorty_logo"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
@@ -103,13 +111,13 @@
                             android:id="@+id/cv_profile_preview_inner"
                             android:layout_width="70dp"
                             android:layout_height="70dp"
+                            app:cardBackgroundColor="@android:color/transparent"
                             app:cardCornerRadius="35dp"
                             app:cardElevation="0dp"
-                            app:cardBackgroundColor="@android:color/transparent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent"
                             app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toEndOf="parent">
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent">
 
                             <ImageView
                                 android:id="@+id/iv_profile_preview"
@@ -122,14 +130,14 @@
                         <ImageView
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@android:drawable/ic_menu_camera"
-                            android:padding="4dp"
                             android:background="@drawable/bg_camera_circle"
-                            app:tint="@color/white"
+                            android:padding="4dp"
+                            android:src="@android:drawable/ic_menu_camera"
                             app:layout_constraintBottom_toBottomOf="@id/cv_profile_preview_inner"
                             app:layout_constraintEnd_toEndOf="@id/cv_profile_preview_inner"
                             app:layout_constraintStart_toStartOf="@id/cv_profile_preview_inner"
-                            app:layout_constraintTop_toTopOf="@id/cv_profile_preview_inner"/>
+                            app:layout_constraintTop_toTopOf="@id/cv_profile_preview_inner"
+                            app:tint="@color/white" />
                     </androidx.constraintlayout.widget.ConstraintLayout>
 
                     <LinearLayout
@@ -148,12 +156,24 @@
                             android:layout_height="wrap_content"
                             android:background="@drawable/bg_status_pill"
                             android:fontFamily="@font/poppins"
-                            android:paddingHorizontal="8dp"
-                            android:paddingVertical="2dp"
+
                             android:text="STUDENT ID"
                             android:textColor="@color/white"
                             android:textSize="10sp"
-                            android:letterSpacing="0.1"/>
+
+                            android:includeFontPadding="false"
+
+                            android:gravity="center"
+
+
+                            tools:targetApi="p"
+                            android:lineHeight="12sp"
+
+
+                            android:fallbackLineSpacing="false"
+
+                            android:paddingHorizontal="8dp"
+                            android:paddingVertical="2dp" />
 
                         <TextView
                             android:id="@+id/tv_preview_name"
@@ -162,6 +182,7 @@
                             android:layout_marginTop="2dp"
                             android:ellipsize="end"
                             android:fontFamily="@font/poppins_bold"
+                            android:includeFontPadding="false"
                             android:maxLines="1"
                             android:text="Loading..."
                             android:textColor="@color/white"
@@ -172,8 +193,8 @@
                             android:id="@+id/tv_preview_bday"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:alpha="0.8"
                             android:fontFamily="@font/poppins"
+                            android:includeFontPadding="false"
                             android:text=""
                             android:textColor="#E0E0E0"
                             android:textSize="11sp"
@@ -202,6 +223,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/poppins_bold"
+                            android:includeFontPadding="false"
                             android:text=""
                             android:textColor="@color/white"
                             android:textSize="14sp"
@@ -211,12 +233,13 @@
                             android:id="@+id/tv_preview_school"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginBottom="8dp"
                             android:alpha="0.9"
                             android:fontFamily="@font/poppins"
+                            android:includeFontPadding="false"
                             android:text=""
                             android:textColor="#E0E0E0"
                             android:textSize="12sp"
-                            android:layout_marginBottom="8dp"
                             tools:text="University Name" />
 
                         <TextView
@@ -225,6 +248,7 @@
                             android:layout_height="wrap_content"
                             android:alpha="0.9"
                             android:fontFamily="@font/poppins"
+                            android:includeFontPadding="false"
                             android:text=""
                             android:textColor="@color/white"
                             android:textSize="12sp"
@@ -238,9 +262,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="24dp"
                 android:layout_marginTop="32dp"
-                android:text="Edit Details"
                 android:fontFamily="@font/poppins_bold"
-                android:textColor="@color/grey_text"/>
+                android:text="Edit Details"
+                android:textColor="@color/grey_text" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/input_first_name"
@@ -250,12 +274,12 @@
                 android:layout_marginHorizontal="24dp"
                 android:layout_marginTop="16dp"
                 app:boxBackgroundColor="#FFFFFF"
-                app:boxStrokeColor="#CCCCCC"
-                app:boxStrokeWidth="1dp"
                 app:boxCornerRadiusBottomEnd="30dp"
                 app:boxCornerRadiusBottomStart="30dp"
                 app:boxCornerRadiusTopEnd="30dp"
                 app:boxCornerRadiusTopStart="30dp"
+                app:boxStrokeColor="#CCCCCC"
+                app:boxStrokeWidth="1dp"
                 app:hintEnabled="false">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -264,9 +288,10 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/poppins"
                     android:hint="First Name"
+                    android:includeFontPadding="false"
                     android:padding="13dp"
                     android:textColor="@color/primary_green"
-                    android:textSize="15sp"/>
+                    android:textSize="15sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -277,12 +302,12 @@
                 android:layout_marginHorizontal="24dp"
                 android:layout_marginTop="16dp"
                 app:boxBackgroundColor="#FFFFFF"
-                app:boxStrokeColor="#CCCCCC"
-                app:boxStrokeWidth="1dp"
                 app:boxCornerRadiusBottomEnd="30dp"
                 app:boxCornerRadiusBottomStart="30dp"
                 app:boxCornerRadiusTopEnd="30dp"
                 app:boxCornerRadiusTopStart="30dp"
+                app:boxStrokeColor="#CCCCCC"
+                app:boxStrokeWidth="1dp"
                 app:hintEnabled="false">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -291,29 +316,50 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/poppins"
                     android:hint="Last Name"
+                    android:includeFontPadding="false"
                     android:padding="13dp"
                     android:textColor="@color/primary_green"
-                    android:textSize="15sp"/>
+                    android:textSize="15sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <EditText
-                android:id="@+id/et_bday"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/input_bday"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="wrap_content"
                 android:layout_marginHorizontal="24dp"
                 android:layout_marginTop="16dp"
-                android:background="@drawable/bg_rounded_border"
-                android:clickable="true"
-                android:drawableEnd="@drawable/baseline_calendar_month"
-                android:drawableTint="@color/dark_grey"
-                android:focusable="false"
-                android:fontFamily="@font/poppins"
-                android:hint="Date of Birth (DD/MM/YYYY)"
-                android:paddingLeft="15dp"
-                android:paddingRight="15dp"
-                android:textColor="@color/primary_green"
-                android:textColorHint="@color/dark_grey"
-                android:textSize="16dp" />
+
+                app:boxBackgroundColor="#FFFFFF"
+                app:boxCornerRadiusBottomEnd="30dp"
+                app:boxCornerRadiusBottomStart="30dp"
+                app:boxCornerRadiusTopEnd="30dp"
+                app:boxCornerRadiusTopStart="30dp"
+                app:boxStrokeColor="#CCCCCC"
+                app:boxStrokeWidth="1dp"
+                app:hintEnabled="false"
+
+                app:endIconMode="custom"
+                app:endIconDrawable="@drawable/baseline_calendar_month"
+                app:endIconTint="@color/dark_grey">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_bday"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins"
+                    android:hint="Date of Birth (DD/MM/YYYY)"
+                    android:includeFontPadding="false"
+
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:cursorVisible="false"
+
+                    android:padding="13dp"
+                    android:textColor="@color/primary_green"
+                    android:textSize="15sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/input_email"
@@ -323,12 +369,12 @@
                 android:layout_marginHorizontal="24dp"
                 android:layout_marginTop="16dp"
                 app:boxBackgroundColor="#FFFFFF"
-                app:boxStrokeColor="#CCCCCC"
-                app:boxStrokeWidth="1dp"
                 app:boxCornerRadiusBottomEnd="30dp"
                 app:boxCornerRadiusBottomStart="30dp"
                 app:boxCornerRadiusTopEnd="30dp"
                 app:boxCornerRadiusTopStart="30dp"
+                app:boxStrokeColor="#CCCCCC"
+                app:boxStrokeWidth="1dp"
                 app:hintEnabled="false">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -337,10 +383,11 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/poppins"
                     android:hint="@string/email"
+                    android:includeFontPadding="false"
                     android:inputType="textEmailAddress"
                     android:padding="13dp"
                     android:textColor="@color/primary_green"
-                    android:textSize="15sp"/>
+                    android:textSize="15sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -351,12 +398,12 @@
                 android:layout_marginHorizontal="24dp"
                 android:layout_marginTop="16dp"
                 app:boxBackgroundColor="#FFFFFF"
-                app:boxStrokeColor="#CCCCCC"
-                app:boxStrokeWidth="1dp"
                 app:boxCornerRadiusBottomEnd="30dp"
                 app:boxCornerRadiusBottomStart="30dp"
                 app:boxCornerRadiusTopEnd="30dp"
                 app:boxCornerRadiusTopStart="30dp"
+                app:boxStrokeColor="#CCCCCC"
+                app:boxStrokeWidth="1dp"
                 app:hintEnabled="false">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -365,9 +412,10 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/poppins"
                     android:hint="School"
+                    android:includeFontPadding="false"
                     android:padding="13dp"
                     android:textColor="@color/primary_green"
-                    android:textSize="15sp"/>
+                    android:textSize="15sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -378,12 +426,12 @@
                 android:layout_marginHorizontal="24dp"
                 android:layout_marginTop="16dp"
                 app:boxBackgroundColor="#FFFFFF"
-                app:boxStrokeColor="#CCCCCC"
-                app:boxStrokeWidth="1dp"
                 app:boxCornerRadiusBottomEnd="30dp"
                 app:boxCornerRadiusBottomStart="30dp"
                 app:boxCornerRadiusTopEnd="30dp"
                 app:boxCornerRadiusTopStart="30dp"
+                app:boxStrokeColor="#CCCCCC"
+                app:boxStrokeWidth="1dp"
                 app:hintEnabled="false">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -392,9 +440,10 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/poppins"
                     android:hint="Course"
+                    android:includeFontPadding="false"
                     android:padding="13dp"
                     android:textColor="@color/primary_green"
-                    android:textSize="15sp"/>
+                    android:textSize="15sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
         </LinearLayout>
@@ -408,11 +457,13 @@
         android:layout_marginBottom="24dp"
         android:backgroundTint="@color/primary_green"
         android:fontFamily="@font/poppins_bold"
+        android:includeFontPadding="false"
         android:paddingVertical="14dp"
         android:text="SAVE CHANGES"
         android:textColor="@color/white"
         android:textSize="16sp"
         app:cornerRadius="30dp"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:layout_editor_absoluteX="24dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

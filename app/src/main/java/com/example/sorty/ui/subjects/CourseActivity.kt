@@ -315,11 +315,9 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
     private fun setupSwipeToDelete() {
         val deleteIcon = ContextCompat.getDrawable(this, R.drawable.baseline_delete_outline_24)!!
         val paint = Paint().apply {
-            color = Color.parseColor("#FF5252") // Red Color
+            color = Color.parseColor("#FF5252")
             isAntiAlias = true
         }
-
-        // Corner radius for the red button (make it match your design, e.g., 12dp or 50% for circle)
         val cornerRadius = 12 * resources.displayMetrics.density
 
         val swipeHandler = object : androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback(
@@ -327,81 +325,50 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
             androidx.recyclerview.widget.ItemTouchHelper.LEFT or androidx.recyclerview.widget.ItemTouchHelper.RIGHT
         ) {
             override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
+                recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder
             ): Boolean = false
 
             override fun onChildDraw(
-                c: Canvas,
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                dX: Float,
-                dY: Float,
-                actionState: Int,
-                isCurrentlyActive: Boolean
+                c: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
+                dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean
             ) {
+                // (Your existing drawing code remains the same here)
                 val itemView = viewHolder.itemView
-
-                // 1. Calculate height of the item to make the button a Square (1:1 Ratio)
                 val itemHeight = itemView.bottom - itemView.top
-
-                // Optional: Add some margin so the red button isn't touching the very edges
-                val verticalMargin = (itemHeight * 0.15).toInt() // 15% margin top/bottom
+                val verticalMargin = (itemHeight * 0.15).toInt()
                 val buttonSize = itemHeight - (verticalMargin * 2)
-
-                // Calculate Icon positioning within the button
                 val iconMargin = (buttonSize - deleteIcon.intrinsicHeight) / 2
-
                 val background = RectF()
 
-                if (dX > 0) { // Swiping Right -> Icon appears on Left
-
-                    // Define the Square on the Left
+                if (dX > 0) {
                     val leftBound = itemView.left.toFloat() + verticalMargin
                     val topBound = itemView.top.toFloat() + verticalMargin
                     val rightBound = leftBound + buttonSize
                     val bottomBound = topBound + buttonSize
-
                     background.set(leftBound, topBound, rightBound, bottomBound)
-
-                    // Draw Red Rounded Square
                     c.drawRoundRect(background, cornerRadius, cornerRadius, paint)
-
-                    // Draw Icon Centered in the Red Square
                     val iconLeft = (leftBound + iconMargin).toInt()
                     val iconTop = (topBound + iconMargin).toInt()
                     val iconRight = (rightBound - iconMargin).toInt()
                     val iconBottom = (bottomBound - iconMargin).toInt()
-
                     deleteIcon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
                     deleteIcon.setTint(Color.WHITE)
                     deleteIcon.draw(c)
-
-                } else if (dX < 0) { // Swiping Left -> Icon appears on Right
-
-                    // Define the Square on the Right
+                } else if (dX < 0) {
                     val rightBound = itemView.right.toFloat() - verticalMargin
                     val topBound = itemView.top.toFloat() + verticalMargin
                     val leftBound = rightBound - buttonSize
                     val bottomBound = topBound + buttonSize
-
                     background.set(leftBound, topBound, rightBound, bottomBound)
-
-                    // Draw Red Rounded Square
                     c.drawRoundRect(background, cornerRadius, cornerRadius, paint)
-
-                    // Draw Icon Centered in the Red Square
                     val iconLeft = (leftBound + iconMargin).toInt()
                     val iconTop = (topBound + iconMargin).toInt()
                     val iconRight = (rightBound - iconMargin).toInt()
                     val iconBottom = (bottomBound - iconMargin).toInt()
-
                     deleteIcon.setBounds(iconLeft, iconTop, iconRight, iconBottom)
                     deleteIcon.setTint(Color.WHITE)
                     deleteIcon.draw(c)
                 }
-
                 super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
             }
 
@@ -409,31 +376,53 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
                 val position = viewHolder.adapterPosition
                 val fileToDelete = fileAdapter.getFileAt(position)
 
-                android.app.AlertDialog.Builder(this@CourseActivity)
-                    .setTitle("Delete File")
-                    .setMessage("Are you sure you want to delete '${fileToDelete.name}'?")
-                    .setPositiveButton("Delete") { dialog, _ ->
-                        val success = dbHelper.deleteFile(fileToDelete.id)
-                        if (success) {
-                            loadCourseFiles()
-                            Snackbar.make(bgSubject, "File deleted", Snackbar.LENGTH_SHORT)
-                                .setBackgroundTint(Color.BLACK)
-                                .setTextColor(Color.WHITE)
-                                .show()
-                        } else {
-                            fileAdapter.notifyItemChanged(position)
-                            Toast.makeText(this@CourseActivity, "Delete failed", Toast.LENGTH_SHORT).show()
-                        }
-                        dialog.dismiss()
-                    }
-                    .setNegativeButton("Cancel") { dialog, _ ->
+                // 👇 1. INFLATE CUSTOM DIALOG LAYOUT
+                val dialogView = layoutInflater.inflate(R.layout.dialog_confirm_save, null)
+                val builder = android.app.AlertDialog.Builder(this@CourseActivity)
+                builder.setView(dialogView)
+                val dialog = builder.create()
+
+                // 👇 2. MAKE BACKGROUND TRANSPARENT
+                dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+                // 👇 3. CUSTOMIZE TEXT FOR DELETION
+                val tvTitle = dialogView.findViewById<TextView>(R.id.tv_title)
+                val tvMessage = dialogView.findViewById<TextView>(R.id.tv_message)
+                val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
+                val btnConfirm = dialogView.findViewById<Button>(R.id.btn_confirm)
+
+                tvTitle.text = "Delete File"
+                tvMessage.text = "Are you sure you want to delete '${fileToDelete.name}'?"
+                btnConfirm.text = "Delete"
+                btnConfirm.backgroundTintList = ContextCompat.getColorStateList(this@CourseActivity, android.R.color.holo_red_dark) // Change button color to red
+
+                // 👇 4. BUTTON LISTENERS
+                btnCancel.setOnClickListener {
+                    dialog.dismiss()
+                    fileAdapter.notifyItemChanged(position) // Reset swipe
+                }
+
+                btnConfirm.setOnClickListener {
+                    val success = dbHelper.deleteFile(fileToDelete.id)
+                    if (success) {
+                        loadCourseFiles()
+                        Snackbar.make(bgSubject, "File deleted", Snackbar.LENGTH_SHORT)
+                            .setBackgroundTint(Color.BLACK)
+                            .setTextColor(Color.WHITE)
+                            .show()
+                    } else {
                         fileAdapter.notifyItemChanged(position)
-                        dialog.dismiss()
+                        Toast.makeText(this@CourseActivity, "Delete failed", Toast.LENGTH_SHORT).show()
                     }
-                    .setOnCancelListener {
-                        fileAdapter.notifyItemChanged(position)
-                    }
-                    .show()
+                    dialog.dismiss()
+                }
+
+                // Handle dialog cancellation (clicking outside)
+                dialog.setOnCancelListener {
+                    fileAdapter.notifyItemChanged(position)
+                }
+
+                dialog.show()
             }
         }
 

@@ -1,15 +1,23 @@
 package com.example.sorty.ui.home
 
-import android.app.AlertDialog // 👈 Import for the Modal
+import android.app.AlertDialog
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.example.sorty.databinding.FragmentTaskDetailBinding
 import com.example.sorty.data.models.Task
 import com.example.sorty.DatabaseHelper
+import com.example.sorty.R
+import com.example.sorty.ui.subjects.CourseActivity // Import CourseActivity for casting
 
 class TaskDetailFragment : BottomSheetDialogFragment() {
 
@@ -52,7 +60,6 @@ class TaskDetailFragment : BottomSheetDialogFragment() {
         setupListeners()
     }
 
-    // --- Data Loading Logic ---
     private fun loadTaskDetails() {
         if (taskId != -1L) {
             currentTask = dbHelper.getTaskById(taskId)
@@ -62,11 +69,9 @@ class TaskDetailFragment : BottomSheetDialogFragment() {
                 bind.detailTaskLabel.text = task.title
                 bind.detailTaskDatetime.text = task.getFormattedDateTime()
 
-                // 👇 NEW: Set Subject Name
                 val subjectName = if (task.category.isNullOrEmpty()) "None" else task.category
                 bind.detailSubjectName.text = "Subject: $subjectName"
 
-                // Description
                 val description = task.content
                 if (description.isNullOrEmpty()) {
                     bind.detailDescriptionDisplay.text = "No Description"
@@ -88,24 +93,46 @@ class TaskDetailFragment : BottomSheetDialogFragment() {
         }
 
         bind.detailDeleteBtn.setOnClickListener {
-            // 👇 Show Modal instead of deleting immediately
             showDeleteConfirmation()
         }
     }
 
-    // 👇 NEW: Confirmation Modal Logic
+    // 👇 UPDATED: Uses the Custom XML Layout
     private fun showDeleteConfirmation() {
-        AlertDialog.Builder(requireContext())
-            .setTitle("Delete Note")
-            .setMessage("Are you sure you want to delete this note?")
-            .setPositiveButton("Delete") { dialog, _ ->
-                deleteTask() // Call the actual delete function if confirmed
-                dialog.dismiss()
-            }
-            .setNegativeButton("Cancel") { dialog, _ ->
-                dialog.dismiss()
-            }
-            .show()
+        // 1. Inflate the custom layout
+        val dialogView = layoutInflater.inflate(R.layout.dialog_confirm_save, null)
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setView(dialogView)
+        val dialog = builder.create()
+
+        // 2. Transparent background for rounded corners
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        // 3. Find Views
+        val tvTitle = dialogView.findViewById<TextView>(R.id.tv_title)
+        val tvMessage = dialogView.findViewById<TextView>(R.id.tv_message)
+        val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
+        val btnConfirm = dialogView.findViewById<Button>(R.id.btn_confirm)
+
+        // 4. Customize for "Delete" context
+        tvTitle.text = "Delete Note"
+        tvMessage.text = "Are you sure you want to delete this note?"
+
+        // Change Confirm Button to Red/Delete
+        btnConfirm.text = "Delete"
+        btnConfirm.backgroundTintList = ContextCompat.getColorStateList(requireContext(), android.R.color.holo_red_dark)
+
+        // 5. Button Logic
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        btnConfirm.setOnClickListener {
+            deleteTask()
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun deleteTask() {
@@ -113,24 +140,22 @@ class TaskDetailFragment : BottomSheetDialogFragment() {
             val success = dbHelper.deleteTask(task.id)
 
             if (success) {
-                // Inform the HomeFragment to refresh the list
+                // Refresh HomeFragment if opened from there
                 (parentFragment as? HomeFragment)?.loadTasksFromDatabase()
 
-                // Inform CourseActivity to refresh if opened from there
-                // (Note: This assumes your Activity is named CourseActivity if you are reusing this fragment there)
-                // (activity as? com.example.sorty.ui.subjects.CourseActivity)?.loadCourseTasks()
+                // Refresh CourseActivity if opened from there
+                (activity as? CourseActivity)?.loadCourseTasks()
 
-                Toast.makeText(context, "To-Do deleted", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Note deleted", Toast.LENGTH_SHORT).show()
                 dismiss()
             } else {
-                Toast.makeText(context, "Failed to delete to-do.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Failed to delete note.", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun openEditMode() {
         dismiss()
-
         currentTask?.let { task ->
             val editFragment = addNotes.newInstance(task.id)
             editFragment.show(parentFragmentManager, "EditNotesSheet")

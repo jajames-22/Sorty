@@ -1,143 +1,151 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- 1. Wrapped in NestedScrollView for scrolling support -->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/white"
+    android:fillViewport="true"
     android:padding="24dp">
 
-    <!-- Emoji Icon -->
-    <TextView
-        android:id="@+id/detail_emoji_icon"
-        android:layout_width="66dp"
-        android:layout_height="69dp"
-        android:gravity="center"
-        android:textColor="@android:color/black"
-        android:textSize="40sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="📚" />
+    <!-- 2. The Container for your items -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-    <!-- DELETE Button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/detail_delete_btn"
-        style="@style/Widget.MaterialComponents.Button.TextButton"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:insetTop="0dp"
-        android:insetBottom="0dp"
-        android:padding="0dp"
-        app:backgroundTint="@color/primary_green"
-        app:cornerRadius="50dp"
-        app:icon="@drawable/baseline_delete_outline_24"
-        app:iconGravity="textStart"
-        app:iconPadding="0dp"
-        app:iconSize="20dp"
-        app:iconTint="@color/white"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:rippleColor="@color/white" />
+        <!-- Emoji Icon -->
+        <TextView
+            android:id="@+id/detail_emoji_icon"
+            android:layout_width="66dp"
+            android:layout_height="69dp"
+            android:gravity="center"
+            android:textColor="@android:color/black"
+            android:textSize="40sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="📚" />
 
-    <!-- EDIT Button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/detail_edit_btn"
-        style="@style/Widget.MaterialComponents.Button.TextButton"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginEnd="8dp"
-        android:insetTop="0dp"
-        android:insetBottom="0dp"
-        android:padding="0dp"
-        app:backgroundTint="@color/primary_green"
-        app:cornerRadius="50dp"
-        app:icon="@drawable/baseline_mode_edit_24"
-        app:iconGravity="textStart"
-        app:iconPadding="0dp"
-        app:iconSize="20dp"
-        app:iconTint="@color/white"
-        app:layout_constraintEnd_toStartOf="@+id/detail_delete_btn"
-        app:layout_constraintTop_toTopOf="parent" />
+        <!-- DELETE Button (Top Right) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/detail_delete_btn"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:padding="0dp"
+            app:backgroundTint="@color/primary_green"
+            app:cornerRadius="50dp"
+            app:icon="@drawable/baseline_delete_outline_24"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="20dp"
+            app:iconTint="@color/white"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:rippleColor="@color/white" />
 
-    <!-- Task Label (Updated to align left with Emoji) -->
-    <TextView
-        android:id="@+id/detail_task_label"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:fontFamily="@font/poppins_bold"
-        android:gravity="start|center_vertical"
-        android:includeFontPadding="false"
-        android:textAlignment="viewStart"
-        android:textColor="@android:color/black"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/detail_emoji_icon"
-        tools:text="Label Name" />
+        <!-- EDIT Button (Left of Delete) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/detail_edit_btn"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="8dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:padding="0dp"
+            app:backgroundTint="@color/primary_green"
+            app:cornerRadius="50dp"
+            app:icon="@drawable/baseline_mode_edit_24"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconSize="20dp"
+            app:iconTint="@color/white"
+            app:layout_constraintEnd_toStartOf="@+id/detail_delete_btn"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Date Section -->
+        <!-- Task Label -->
+        <TextView
+            android:id="@+id/detail_task_label"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/poppins_bold"
+            android:gravity="start|center_vertical"
+            android:includeFontPadding="false"
+            android:textAlignment="viewStart"
+            android:textColor="@android:color/black"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/detail_emoji_icon"
+            tools:text="Label Name" />
 
-    <TextView
-        android:id="@+id/detailSubjectName"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:fontFamily="@font/poppins"
-        android:gravity="start|center_vertical"
-        android:includeFontPadding="false"
-        android:textAlignment="viewStart"
-        android:textColor="@color/dark_grey"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/detail_task_datetime"
-        tools:text="Subject: None" />
+        <!-- Calendar Icon -->
+        <ImageView
+            android:id="@+id/detail_calendar_icon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginTop="4dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/detail_task_label"
+            app:srcCompat="@drawable/baseline_calendar_month"
+            app:tint="@color/primary_green" />
 
-    <ImageView
-        android:id="@+id/detail_calendar_icon"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginTop="4dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/detail_task_label"
-        app:srcCompat="@drawable/baseline_calendar_month"
-        app:tint="@color/primary_green" />
+        <!-- Date Text -->
+        <TextView
+            android:id="@+id/detail_task_datetime"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:fontFamily="@font/poppins"
+            android:includeFontPadding="false"
+            android:textColor="@color/primary_green"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="@id/detail_calendar_icon"
+            app:layout_constraintStart_toEndOf="@id/detail_calendar_icon"
+            app:layout_constraintTop_toTopOf="@+id/detail_calendar_icon"
+            tools:text="Dec 12, 2025 | 10:00 am" />
 
-    <TextView
-        android:id="@+id/detail_task_datetime"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:fontFamily="@font/poppins"
-        android:includeFontPadding="false"
-        android:textColor="@color/primary_green"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="@id/detail_calendar_icon"
-        app:layout_constraintStart_toEndOf="@id/detail_calendar_icon"
-        app:layout_constraintTop_toTopOf="@+id/detail_calendar_icon"
-        app:layout_constraintVertical_bias="1.0"
-        tools:text="Dec 12, 2025 | 10:00 am" />
+        <!-- Subject Name -->
+        <TextView
+            android:id="@+id/detail_subject_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:fontFamily="@font/poppins"
+            android:gravity="start|center_vertical"
+            android:includeFontPadding="false"
+            android:textAlignment="viewStart"
+            android:textColor="@color/dark_grey"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/detail_task_datetime"
+            tools:text="Subject: Mathematics" />
 
-    <!-- 👇 FIXED SUBJECT NAME 👇 -->
+        <!-- Description Box (Responsive) -->
+        <TextView
+            android:id="@+id/detail_description_display"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/rounded_background_item_outline"
+            android:fontFamily="@font/poppins"
+            android:gravity="top|start"
+            android:minHeight="120dp"
+            android:padding="12dp"
+            android:textColor="@android:color/black"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/detail_subject_name"
+            tools:text="This is a very long task description... \n\nIt can now expand as much as needed because it is inside a NestedScrollView. The bottom sheet will grow to fit the text, and if it exceeds the screen height, it will scroll naturally." />
 
-    <!-- Description Box -->
-    <TextView
-        android:id="@+id/detail_description_display"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/rounded_background_item_outline"
-        android:fontFamily="@font/poppins"
-        android:gravity="top|start"
-        android:minHeight="120dp"
-        android:padding="12dp"
-        android:textColor="@android:color/black"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/detailSubjectName"
-        tools:text="This is the task description retrieved from the database." />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.core.widget.NestedScrollView>

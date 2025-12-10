@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Sorty">
         <activity
+            android:name=".ui.account.SetupPin"
+            android:exported="false" />
+        <activity
             android:name=".ui.subjects.FileAdapter"
             android:exported="false" />
         <activity android:name=".ui.subjects.CourseActivity" />
@@ -48,6 +51,11 @@
             android:name=".ui.account.EditProfileActivity"
             android:exported="false"
             android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar" />
+        <activity
+            android:name=".ui.account.SetupPinActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
     </application>
 
 </manifest>
