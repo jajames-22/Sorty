@@ -391,4 +391,33 @@ class DatabaseHelper(context: Context) :
             emojiIcon = emojiIcon
         )
     }
+
+    // ==========================================
+    // DATA MANAGEMENT FUNCTIONS
+    // ==========================================
+
+    fun resetAccountData(): Boolean {
+        val db = writableDatabase
+        var success = true
+
+        db.beginTransaction()
+        try {
+            // 1. Delete content
+            db.delete("tasks", null, null)
+            db.delete("files", null, null)
+            db.delete("subjects", null, null)
+
+            // 2. DELETE THE USER (CRITICAL FIX)
+            // If this line is missing, the app will keep logging you in automatically!
+            db.delete("users", null, null)
+
+            db.setTransactionSuccessful()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            success = false
+        } finally {
+            db.endTransaction()
+        }
+        return success
+    }
 }
