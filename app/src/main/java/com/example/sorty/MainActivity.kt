@@ -18,13 +18,22 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.RecyclerView // Added for Adapter
 import com.example.sorty.databinding.ActivityMainBinding
 import com.google.android.material.tabs.TabLayoutMediator // Added for Dots
-
+import com.example.sorty.ui.home.Home
 class MainActivity : AppCompatActivity() {
 
     private lateinit var bind: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 0. CHECK SESSION: If logged in, skip to Home immediately
+        val sessionManager = SessionManager(this)
+        if (sessionManager.isLoggedIn()) {
+            val intent = Intent(this, Home::class.java)
+            startActivity(intent)
+            finish() // Close MainActivity so user can't go back to it
+            return // Stop loading the rest of the UI
+        }
 
         // 1. ENABLE EDGE-TO-EDGE
         enableEdgeToEdge()
