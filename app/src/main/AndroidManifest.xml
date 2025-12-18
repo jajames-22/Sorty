@@ -11,6 +11,11 @@
         android:roundIcon="@drawable/sorty_logo_rounded"
         android:supportsRtl="true"
         android:theme="@style/Theme.Sorty">
+
+        <activity
+            android:name=".ui.auth.EmailConfirmActivity"
+            android:exported="false" />
+
         <activity
             android:name=".CreatePassword"
             android:exported="false" />

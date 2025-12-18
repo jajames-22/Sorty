@@ -19,15 +19,18 @@ import java.util.*
 
 class CreateAccount : AppCompatActivity() {
 
+    // 1. Declare Binding
     private lateinit var bind: ActivityCreateAccountBinding
+
+    // Calendar for DatePicker
     private val calendar = Calendar.getInstance()
     private lateinit var sessionManager: SessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // 2. Check Session (Skip screen if already logged in)
         sessionManager = SessionManager(this)
-
         if (sessionManager.isLoggedIn()) {
             val intent = Intent(this, Home::class.java)
             startActivity(intent)
@@ -37,8 +40,12 @@ class CreateAccount : AppCompatActivity() {
 
         enableEdgeToEdge()
 
+        // 3. Initialize ViewBinding
         bind = ActivityCreateAccountBinding.inflate(layoutInflater)
         setContentView(bind.root)
+
+        // Optional: UI Adjustments (Status bar, hiding Action bar)
+        supportActionBar?.hide()
         setStatusBarIconsLight(window, false)
 
         ViewCompat.setOnApplyWindowInsetsListener(bind.root) { v, insets ->
@@ -46,14 +53,20 @@ class CreateAccount : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        supportActionBar?.hide()
 
+        // 4. Back Button Logic
         bind.backbtn.setOnClickListener {
             finish()
         }
 
+        // 5. Date Picker Logic
+        bind.editBday.setOnClickListener {
+            showDatePickerDialog()
+        }
+
+        // 6. "CONTINUE" BUTTON LOGIC -> Navigates to CreatePassword
         bind.buttonContinue.setOnClickListener {
-            // 1. Get inputs (Password removed)
+            // A. Get text from inputs
             val first = bind.editFirstName.text.toString().trim()
             val last = bind.editLastName.text.toString().trim()
             val bday = bind.editBday.text.toString().trim()
@@ -61,17 +74,17 @@ class CreateAccount : AppCompatActivity() {
             val school = bind.editSchool.text.toString().trim()
             val course = bind.editCourse.text.toString().trim()
 
-            // 2. Validate inputs (Password check removed)
+            // B. Validate that fields are not empty
             if (first.isEmpty() || last.isEmpty() || bday.isEmpty() ||
                 email.isEmpty() || school.isEmpty() || course.isEmpty()) {
                 Toast.makeText(this, "Please fill out all fields", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // 3. PASS DATA to the new CreatePassword Activity
-            // Note: We don't save "has_account" yet, better to save that after password creation
+            // C. Create Intent to go to CreatePassword
             val intent = Intent(this, CreatePassword::class.java)
 
+            // D. Pass the data to the next screen (so we can save it later)
             intent.putExtra("EXTRA_FIRST", first)
             intent.putExtra("EXTRA_LAST", last)
             intent.putExtra("EXTRA_BDAY", bday)
@@ -79,14 +92,12 @@ class CreateAccount : AppCompatActivity() {
             intent.putExtra("EXTRA_SCHOOL", school)
             intent.putExtra("EXTRA_COURSE", course)
 
+            // E. Start the Activity
             startActivity(intent)
-        }
-
-        bind.editBday.setOnClickListener {
-            showDatePickerDialog()
         }
     }
 
+    // Helper function to show the calendar popup
     private fun showDatePickerDialog() {
         val dateSetListener = DatePickerDialog.OnDateSetListener { _, year, monthOfYear, dayOfMonth ->
             calendar.set(Calendar.YEAR, year)
@@ -102,16 +113,19 @@ class CreateAccount : AppCompatActivity() {
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
         )
+        // Prevent selecting future dates
         datePicker.datePicker.maxDate = System.currentTimeMillis()
         datePicker.show()
     }
 
+    // Helper to format the date text
     private fun updateLabel() {
         val dateFormat = "dd/MM/yyyy"
         val simpleDateFormat = SimpleDateFormat(dateFormat, Locale.US)
         bind.editBday.setText(simpleDateFormat.format(calendar.time))
     }
 
+    // Helper to change status bar icon colors (White text on green background)
     private fun setStatusBarIconsLight(window: Window, isLight: Boolean) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val insetsController = window.insetsController ?: return
