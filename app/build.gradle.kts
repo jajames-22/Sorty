@@ -57,6 +57,9 @@ dependencies {
     // --- ADD THIS LINE HERE ---
     implementation("com.github.yalantis:ucrop:2.2.8")
     // --------------------------
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
