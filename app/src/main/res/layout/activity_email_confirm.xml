@@ -114,15 +114,16 @@
             android:id="@+id/btnContinue"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:text="Continue"
-            android:textAllCaps="false"
-            android:textColor="@color/black"
-            android:textSize="16sp"
-            android:fontFamily="@font/poppins"
-            android:textStyle="bold"
+            android:layout_marginBottom="24dp"
             android:background="@drawable/bg_otp_box"
             android:backgroundTint="@color/secondary_yellow"
-            android:layout_marginBottom="24dp"/>
+            android:fontFamily="@font/poppins"
+            android:includeFontPadding="false"
+            android:text="Continue"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
 
         <LinearLayout
             android:layout_width="wrap_content"
