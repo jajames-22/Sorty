@@ -11,30 +11,55 @@
         android:roundIcon="@drawable/sorty_logo_rounded"
         android:supportsRtl="true"
         android:theme="@style/Theme.Sorty">
-
-        <activity android:name=".ui.account.SetupPin" android:exported="false" />
-        <activity android:name=".ui.subjects.FileAdapter" android:exported="false" />
+        <activity
+            android:name=".CreatePassword"
+            android:exported="false" />
+        <activity
+            android:name=".ui.account.SetupPin"
+            android:exported="false" />
+        <activity
+            android:name=".ui.subjects.FileAdapter"
+            android:exported="false" />
         <activity android:name=".ui.subjects.CourseActivity" />
-        <activity android:name=".InsertPicture" android:exported="false" />
-        <activity android:name="com.yalantis.ucrop.UCropActivity" android:screenOrientation="portrait" android:theme="@style/Theme.Sorty.UCrop" />
-        <activity android:name=".ui.home.addNotes" android:exported="false" />
-        <activity android:name=".ui.home.Home" android:exported="true" android:label="@string/title_activity_home" android:theme="@style/Theme.Sorty" />
-
-        <activity android:name=".CreateAccount" android:exported="false" />
-
-        <activity android:name=".LoginActivity" android:exported="false" />
-
+        <activity
+            android:name=".InsertPicture"
+            android:exported="false" />
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Sorty.UCrop" />
+        <activity
+            android:name=".ui.home.addNotes"
+            android:exported="false" />
+        <activity
+            android:name=".ui.home.Home"
+            android:exported="true"
+            android:label="@string/title_activity_home"
+            android:theme="@style/Theme.Sorty" />
+        <activity
+            android:name=".CreateAccount"
+            android:exported="false" />
+        <activity
+            android:name=".LoginActivity"
+            android:exported="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".ui.account.EditProfileActivity" android:exported="false" android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar" />
-        <activity android:name=".ui.account.SetupPinActivity" android:exported="false" android:screenOrientation="portrait" android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity
+            android:name=".ui.account.EditProfileActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar" />
+        <activity
+            android:name=".ui.account.SetupPinActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
     </application>
 
 </manifest>

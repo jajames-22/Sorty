@@ -28,7 +28,6 @@ class CreateAccount : AppCompatActivity() {
 
         sessionManager = SessionManager(this)
 
-        // Check if already logged in (Legacy check)
         if (sessionManager.isLoggedIn()) {
             val intent = Intent(this, Home::class.java)
             startActivity(intent)
@@ -54,44 +53,33 @@ class CreateAccount : AppCompatActivity() {
         }
 
         bind.buttonContinue.setOnClickListener {
-            // 1. Get inputs
+            // 1. Get inputs (Password removed)
             val first = bind.editFirstName.text.toString().trim()
             val last = bind.editLastName.text.toString().trim()
             val bday = bind.editBday.text.toString().trim()
             val email = bind.editEmail.text.toString().trim()
-            val password = bind.editPassword.text.toString().trim()
             val school = bind.editSchool.text.toString().trim()
             val course = bind.editCourse.text.toString().trim()
 
-            // 2. Validate inputs
+            // 2. Validate inputs (Password check removed)
             if (first.isEmpty() || last.isEmpty() || bday.isEmpty() ||
-                email.isEmpty() || password.isEmpty() || school.isEmpty() || course.isEmpty()) {
+                email.isEmpty() || school.isEmpty() || course.isEmpty()) {
                 Toast.makeText(this, "Please fill out all fields", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // ==================================================================
-            // NEW: Save "has_account" flag so MainActivity knows to skip to Login
-            // ==================================================================
-            val prefs = getSharedPreferences("SortyPrefs", MODE_PRIVATE)
-            val editor = prefs.edit()
-            editor.putBoolean("has_account", true)
-            editor.apply()
-
-            // 3. PASS DATA to InsertPicture
-            val intent = Intent(this, InsertPicture::class.java)
+            // 3. PASS DATA to the new CreatePassword Activity
+            // Note: We don't save "has_account" yet, better to save that after password creation
+            val intent = Intent(this, CreatePassword::class.java)
 
             intent.putExtra("EXTRA_FIRST", first)
             intent.putExtra("EXTRA_LAST", last)
             intent.putExtra("EXTRA_BDAY", bday)
             intent.putExtra("EXTRA_EMAIL", email)
-            intent.putExtra("EXTRA_PASSWORD", password)
             intent.putExtra("EXTRA_SCHOOL", school)
             intent.putExtra("EXTRA_COURSE", course)
 
             startActivity(intent)
-            // Note: We do NOT finish() here if you want them to be able to come back
-            // from InsertPicture. If InsertPicture is a one-way street, you can add finish().
         }
 
         bind.editBday.setOnClickListener {
@@ -114,7 +102,6 @@ class CreateAccount : AppCompatActivity() {
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
         )
-        // Set max date to today (cannot pick future birthdays)
         datePicker.datePicker.maxDate = System.currentTimeMillis()
         datePicker.show()
     }
