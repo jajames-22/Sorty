@@ -1,7 +1,6 @@
 package com.example.sorty
 
 import android.content.Intent
-import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -12,7 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.sorty.databinding.ActivityLoginBinding
-import com.example.sorty.ui.home.Home // Ensure this imports your Home Activity
+import com.example.sorty.ui.home.Home
 
 class LoginActivity : AppCompatActivity() {
 
@@ -23,77 +22,78 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. Initialize View Binding
+        // 1. Initialize Helpers
+        sessionManager = SessionManager(this)
+        db = DatabaseHelper(this)
+
+        // 2. SESSION CHECK: Kung naka-login na, diretso agad sa Home
+        if (sessionManager.isLoggedIn()) { // Siguraduhin na may isLoggedIn() method sa SessionManager
+            val intent = Intent(this, Home::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+            return // Para hindi na ituloy ang pag-inflate ng layout
+        }
+
+        // 3. Initialize View Binding
         bind = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(bind.root)
 
-        // 2. Initialize Helpers
-        db = DatabaseHelper(this)
-        sessionManager = SessionManager(this)
+        // 4. UI Styling (Green Status Bar)
+        window.statusBarColor = getColor(R.color.primary_green)
+        setSystemBarAppearance(window, false)
 
-        // 3. Set Status Bar to Green (match background)
-        window.statusBarColor = getColor(R.color.primary_green) // Make sure primary_green is defined
-        setSystemBarAppearance(window, false) // false = white text/icons
-
-        // 4. Handle Edge-to-Edge padding
         ViewCompat.setOnApplyWindowInsetsListener(bind.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        // 5. Hide Action Bar
         supportActionBar?.hide()
 
         setupButtons()
     }
 
     private fun setupButtons() {
-        // --- LOGIN BUTTON ---
         bind.btnContinue.setOnClickListener {
             val email = bind.etEmail.text.toString().trim()
-            val password = bind.etPassword.toString().trim()
+            // FIX: added .text bago mag .toString()
+            val password = bind.editPassword.text.toString().trim()
 
             if (email.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
             } else {
-                // Check Database
-                // Note: You need to implement 'checkUser' in DatabaseHelper. See below.
                 val isValid = db.checkUser(email, password)
 
                 if (isValid) {
-                    // SAVE SESSION
-                    sessionManager.createLoginSession(email) // You might need to add this method
+                    // SAVE SESSION & Update Prefs for MainActivity logic
+                    sessionManager.createLoginSession(email)
+
+                    // Napaka-importante nito para sa logic ng MainActivity mo:
+                    val prefs = getSharedPreferences("SortyPrefs", MODE_PRIVATE)
+                    prefs.edit().putBoolean("is_logged_in", true).apply()
 
                     Toast.makeText(this, "Login Successful!", Toast.LENGTH_SHORT).show()
 
-                    // Navigate to Home
                     val intent = Intent(this, Home::class.java)
-                    // Clear history so back button exits app instead of returning to login
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     startActivity(intent)
+                    finish()
                 } else {
                     Toast.makeText(this, "Invalid Email or Password", Toast.LENGTH_SHORT).show()
                 }
             }
         }
 
-        // NAVIGATE TO CREATE ACCOUNT ACTIVITY
         bind.btnCreateAccount.setOnClickListener {
-            // "this" refers to LoginActivity, "CreateAccount::class.java" is the destination
-            val intent = Intent(this, CreateAccount::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, CreateAccount::class.java))
         }
 
-        // --- GOOGLE LOGIN (Placeholder) ---
-
-        // --- FORGOT PASSWORD (Placeholder) ---
         bind.tvForgotPass.setOnClickListener {
             Toast.makeText(this, "Forgot Password feature coming soon!", Toast.LENGTH_SHORT).show()
         }
     }
 
-    // Helper for Status Bar Text Color
     private fun setSystemBarAppearance(window: Window, isLight: Boolean) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val insetsController = window.insetsController ?: return
