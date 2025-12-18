@@ -37,6 +37,14 @@ android {
     buildFeatures {
         viewBinding = true
     }
+
+    // 👇 ADDED THIS BLOCK TO FIX THE ERROR 👇
+    packaging {
+        resources {
+            pickFirsts.add("META-INF/NOTICE.md")
+            pickFirsts.add("META-INF/LICENSE.md")
+        }
+    }
 }
 
 dependencies {
@@ -51,12 +59,16 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.cardview)
-    implementation("com.google.android.material:material:1.12.0")
-    implementation("com.google.android.material:material:1.11.0")
 
-    // --- ADD THIS LINE HERE ---
+    // Kept the newer version (1.12.0) and commented out the older one
+    implementation("com.google.android.material:material:1.12.0")
+    // implementation("com.google.android.material:material:1.11.0")
+
+    implementation("com.sun.mail:android-mail:1.6.7")
+    implementation("com.sun.mail:android-activation:1.6.7")
+
     implementation("com.github.yalantis:ucrop:2.2.8")
-    // --------------------------
+
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
