@@ -12,7 +12,7 @@
         android:id="@+id/header_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="100dp"
         android:gravity="center_horizontal"
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
@@ -93,6 +93,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins"
             android:hint="Email"
+            android:includeFontPadding="false"
             android:inputType="textEmailAddress"
             android:padding="13dp"
             android:textColor="@color/primary_green"
@@ -101,7 +102,7 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/input_password"
+        android:id="@+id/etPassword"
         style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -128,6 +129,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins"
             android:hint="Password"
+            android:includeFontPadding="false"
             android:inputType="textPassword"
             android:padding="13dp"
             android:textColor="@color/primary_green"
@@ -140,7 +142,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="24dp"
         android:backgroundTint="@color/secondary_yellow"
         android:fontFamily="@font/poppins_bold"
@@ -152,7 +154,7 @@
         app:cornerRadius="30dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/input_password" />
+        app:layout_constraintTop_toBottomOf="@+id/etPassword" />
 
     <TextView
         android:id="@+id/tv_forgot_pass"

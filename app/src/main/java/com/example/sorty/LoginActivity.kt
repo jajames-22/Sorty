@@ -52,7 +52,7 @@ class LoginActivity : AppCompatActivity() {
         // --- LOGIN BUTTON ---
         bind.btnContinue.setOnClickListener {
             val email = bind.etEmail.text.toString().trim()
-            val password = bind.etPassword.text.toString().trim()
+            val password = bind.etPassword.toString().trim()
 
             if (email.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
@@ -86,9 +86,6 @@ class LoginActivity : AppCompatActivity() {
         }
 
         // --- GOOGLE LOGIN (Placeholder) ---
-        bind.ivGoogleLogin.setOnClickListener {
-            Toast.makeText(this, "Google Login feature coming soon!", Toast.LENGTH_SHORT).show()
-        }
 
         // --- FORGOT PASSWORD (Placeholder) ---
         bind.tvForgotPass.setOnClickListener {
