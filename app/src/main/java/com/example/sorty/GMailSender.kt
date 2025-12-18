@@ -11,7 +11,6 @@ import javax.mail.internet.MimeMessage
 
 object GMailSender {
 
-    // REPLACE THESE WITH YOUR OWN DETAILS
     private const val SENDER_EMAIL = "sorty.tridev@gmail.com"
     private const val SENDER_PASSWORD = "yvks bdrh mkoz olht" // 16-character App Password
 
@@ -33,7 +32,9 @@ object GMailSender {
             message.setFrom(InternetAddress(SENDER_EMAIL))
             message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientEmail))
             message.subject = subject
-            message.setText(body)
+
+            // CRITICAL CHANGE: Set content type to HTML
+            message.setContent(body, "text/html; charset=utf-8")
 
             Transport.send(message)
             true
