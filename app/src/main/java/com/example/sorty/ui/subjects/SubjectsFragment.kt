@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.sorty.DatabaseHelper
+import com.example.sorty.SessionManager // 👈 IMPORT THIS
 import com.example.sorty.databinding.FragmentSubjectsBinding
 
 class SubjectsFragment : Fragment(), AddNewSubject.AddNewSubjectListener {
@@ -16,6 +17,7 @@ class SubjectsFragment : Fragment(), AddNewSubject.AddNewSubjectListener {
     private lateinit var bind: FragmentSubjectsBinding
     private lateinit var dbHelper: DatabaseHelper
     private lateinit var adapter: SubjectsAdapter
+    private lateinit var sessionManager: SessionManager // 1. Add SessionManager
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -28,16 +30,13 @@ class SubjectsFragment : Fragment(), AddNewSubject.AddNewSubjectListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Initialize DB
+        // 2. Initialize Helpers
         dbHelper = DatabaseHelper(requireContext())
+        sessionManager = SessionManager(requireContext())
 
-        // 2. Setup RecyclerView
         setupRecyclerView()
-
-        // 3. Load Data
         loadSubjects()
 
-        // 4. FAB Click Listener
         bind.addSubjectBtn.setOnClickListener {
             val bottomSheet = AddNewSubject()
             bottomSheet.setAddNewSubjectListener(this)
@@ -45,25 +44,18 @@ class SubjectsFragment : Fragment(), AddNewSubject.AddNewSubjectListener {
         }
     }
 
-    // 👇 Refresh list when returning from CourseActivity (in case of edits/deletes there)
     override fun onResume() {
         super.onResume()
         loadSubjects()
     }
 
     private fun setupRecyclerView() {
-        // Initialize adapter
         adapter = SubjectsAdapter(emptyList()) { selectedSubject ->
-
-            // 👇 LOGIC TO OPEN COURSE ACTIVITY
             val intent = Intent(requireContext(), CourseActivity::class.java)
-
-            // Pass data to the next screen
             intent.putExtra("COURSE_ID", selectedSubject.id)
             intent.putExtra("COURSE_NAME", selectedSubject.name)
             intent.putExtra("COURSE_DESC", selectedSubject.description)
             intent.putExtra("COURSE_COLOR", selectedSubject.color)
-
             startActivity(intent)
         }
 
@@ -72,10 +64,13 @@ class SubjectsFragment : Fragment(), AddNewSubject.AddNewSubjectListener {
     }
 
     private fun loadSubjects() {
-        val subjects = dbHelper.getAllSubjects()
+        // 3. Get Email and Pass to Database
+        val currentUserEmail = sessionManager.getEmail() ?: return
+
+        // FIX: Pass email to getAllSubjects
+        val subjects = dbHelper.getAllSubjects(currentUserEmail)
         adapter.updateData(subjects)
 
-        // Toggle Empty State
         if (subjects.isEmpty()) {
             bind.emptyFolderIcon.visibility = View.VISIBLE
             bind.emptyFolderText.visibility = View.VISIBLE
@@ -89,9 +84,16 @@ class SubjectsFragment : Fragment(), AddNewSubject.AddNewSubjectListener {
 
     // --- LISTENER IMPLEMENTATIONS ---
 
-    // 1. Handle Add
     override fun onSubjectAdded(subjectName: String, subjectDescription: String, colorHex: String) {
-        val success = dbHelper.insertSubject(subjectName, subjectDescription, colorHex)
+        val currentUserEmail = sessionManager.getEmail()
+
+        if (currentUserEmail.isNullOrEmpty()) {
+            Toast.makeText(requireContext(), "Error: Not logged in", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // 4. FIX: Pass email as the first argument
+        val success = dbHelper.insertSubject(currentUserEmail, subjectName, subjectDescription, colorHex)
 
         if (success) {
             Toast.makeText(requireContext(), "Subject Added!", Toast.LENGTH_SHORT).show()
@@ -101,7 +103,6 @@ class SubjectsFragment : Fragment(), AddNewSubject.AddNewSubjectListener {
         }
     }
 
-    // 2. 👇 FIXED: Handle Update (Required by Interface)
     override fun onSubjectUpdated(id: Int, subjectName: String, subjectDescription: String, colorHex: String) {
         val success = dbHelper.updateSubject(id, subjectName, subjectDescription, colorHex)
         if (success) {
@@ -110,7 +111,6 @@ class SubjectsFragment : Fragment(), AddNewSubject.AddNewSubjectListener {
         }
     }
 
-    // 3. 👇 FIXED: Handle Delete (Required by Interface)
     override fun onSubjectDeleted(id: Int) {
         val success = dbHelper.deleteSubject(id)
         if (success) {

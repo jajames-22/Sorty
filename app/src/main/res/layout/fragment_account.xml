@@ -206,6 +206,7 @@
             app:layout_constraintTop_toBottomOf="@id/card_virtual_id" />
 
         <androidx.cardview.widget.CardView
+            android:id="@+id/card_settings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="24dp"
@@ -293,6 +294,26 @@
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_logout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginTop="24dp"
+            android:paddingVertical="14dp"
+            android:text="Log Out"
+            android:textColor="@color/white"
+            android:backgroundTint="#FF4444"
+            app:cornerRadius="12dp"
+            android:fontFamily="@font/poppins_bold"
+            android:textSize="16sp"
+            app:icon="@drawable/ic_logout"
+            app:iconGravity="textStart"
+            app:iconTint="@color/white"
+            app:layout_constraintTop_toBottomOf="@id/card_settings"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

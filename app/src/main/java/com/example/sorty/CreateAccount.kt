@@ -1,5 +1,6 @@
 package com.example.sorty
 
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -12,34 +13,28 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.sorty.databinding.ActivityCreateAccountBinding
-import android.app.DatePickerDialog
+import com.example.sorty.ui.home.Home
 import java.text.SimpleDateFormat
 import java.util.*
-// Tiyaking tama ang class name ng Home Activity mo
-import com.example.sorty.MainActivity // <--- PALITAN KUNG IBA ANG PANGALAN
-import com.example.sorty.ui.home.Home
 
 class CreateAccount : AppCompatActivity() {
 
     private lateinit var bind: ActivityCreateAccountBinding
     private val calendar = Calendar.getInstance()
-    private lateinit var sessionManager: SessionManager // Deklarasyon ng Session Manager
-
+    private lateinit var sessionManager: SessionManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        sessionManager = SessionManager(this) // Instantiation
+        sessionManager = SessionManager(this)
 
-        // HAKBANG 1: SESSION CHECK - I-redirect agad kung naka-login na
+        // Check if already logged in (Legacy check)
         if (sessionManager.isLoggedIn()) {
             val intent = Intent(this, Home::class.java)
             startActivity(intent)
-            finish() // Isara ang CreateAccount Activity
-            return // Huwag na ituloy ang pag-render ng form
+            finish()
+            return
         }
-
-
 
         enableEdgeToEdge()
 
@@ -54,28 +49,34 @@ class CreateAccount : AppCompatActivity() {
         }
         supportActionBar?.hide()
 
-        // FIXED: backbtn
         bind.backbtn.setOnClickListener {
             finish()
         }
 
-        // FIXED: button_continue (nagiging buttonContinue sa binding)
         bind.buttonContinue.setOnClickListener {
             // 1. Get inputs
-            // FIXED: edit_first_name (nagiging editFirstName sa binding)
             val first = bind.editFirstName.text.toString().trim()
             val last = bind.editLastName.text.toString().trim()
             val bday = bind.editBday.text.toString().trim()
             val email = bind.editEmail.text.toString().trim()
+            val password = bind.editPassword.text.toString().trim()
             val school = bind.editSchool.text.toString().trim()
             val course = bind.editCourse.text.toString().trim()
 
             // 2. Validate inputs
             if (first.isEmpty() || last.isEmpty() || bday.isEmpty() ||
-                email.isEmpty() || school.isEmpty() || course.isEmpty()) {
+                email.isEmpty() || password.isEmpty() || school.isEmpty() || course.isEmpty()) {
                 Toast.makeText(this, "Please fill out all fields", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
+
+            // ==================================================================
+            // NEW: Save "has_account" flag so MainActivity knows to skip to Login
+            // ==================================================================
+            val prefs = getSharedPreferences("SortyPrefs", MODE_PRIVATE)
+            val editor = prefs.edit()
+            editor.putBoolean("has_account", true)
+            editor.apply()
 
             // 3. PASS DATA to InsertPicture
             val intent = Intent(this, InsertPicture::class.java)
@@ -84,13 +85,15 @@ class CreateAccount : AppCompatActivity() {
             intent.putExtra("EXTRA_LAST", last)
             intent.putExtra("EXTRA_BDAY", bday)
             intent.putExtra("EXTRA_EMAIL", email)
+            intent.putExtra("EXTRA_PASSWORD", password)
             intent.putExtra("EXTRA_SCHOOL", school)
             intent.putExtra("EXTRA_COURSE", course)
 
             startActivity(intent)
+            // Note: We do NOT finish() here if you want them to be able to come back
+            // from InsertPicture. If InsertPicture is a one-way street, you can add finish().
         }
 
-        // FIXED: edit_bday
         bind.editBday.setOnClickListener {
             showDatePickerDialog()
         }
@@ -111,6 +114,7 @@ class CreateAccount : AppCompatActivity() {
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
         )
+        // Set max date to today (cannot pick future birthdays)
         datePicker.datePicker.maxDate = System.currentTimeMillis()
         datePicker.show()
     }

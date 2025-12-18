@@ -12,11 +12,9 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.sorty.DatabaseHelper
 import com.example.sorty.R
+import com.example.sorty.SessionManager // Ensure this import exists
 import com.example.sorty.data.models.Task
 import com.example.sorty.databinding.FragmentHomeBinding
-import com.example.sorty.ui.home.TaskDetailFragment
-import com.example.sorty.ui.home.TaskFilter
-import com.example.sorty.ui.home.TodoAdapter
 import java.util.Locale
 
 class HomeFragment : Fragment() {
@@ -24,6 +22,7 @@ class HomeFragment : Fragment() {
     private lateinit var bind: FragmentHomeBinding
     private lateinit var todoAdapter: TodoAdapter
     private lateinit var dbHelper: DatabaseHelper
+    private lateinit var sessionManager: SessionManager // 1. Add SessionManager
 
     // Track the currently active filter (Default to ONGOING)
     private var currentFilter: TaskFilter = TaskFilter.ONGOING
@@ -40,6 +39,7 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         dbHelper = DatabaseHelper(requireContext())
+        sessionManager = SessionManager(requireContext()) // 2. Initialize SessionManager
 
         setupRecyclerView()
         setupListeners()
@@ -81,42 +81,44 @@ class HomeFragment : Fragment() {
 
     // --- Core Filtering Logic ---
     fun loadTasksFromDatabase() {
-        // 1. Query the database based on the current filter state
-        val tasks = when (currentFilter) {
-            TaskFilter.ONGOING -> dbHelper.getOngoingTasks(System.currentTimeMillis())
-            TaskFilter.COMPLETED -> dbHelper.getCompletedTasks()
-            TaskFilter.MISSED -> dbHelper.getMissedTasks(System.currentTimeMillis())
+        // 3. Get the current user's email
+        val currentUserEmail = sessionManager.getEmail() ?: ""
+
+        if (currentUserEmail.isEmpty()) {
+            // Safety check: If no email found, just clear the list or handle logout
+            todoAdapter.updateTasks(emptyList())
+            return
         }
 
-        // 👇 UPDATED: Toggle Empty State Views Visibility
+        // 4. Pass the EMAIL to the database helper functions
+        val tasks = when (currentFilter) {
+            // FIX: Pass (email, time) instead of just (time)
+            TaskFilter.ONGOING -> dbHelper.getOngoingTasks(currentUserEmail, System.currentTimeMillis())
+
+            // FIX: Pass (email)
+            TaskFilter.COMPLETED -> dbHelper.getCompletedTasks(currentUserEmail)
+
+            // FIX: Pass (email, time)
+            TaskFilter.MISSED -> dbHelper.getMissedTasks(currentUserEmail, System.currentTimeMillis())
+        }
+
+        // Toggle Empty State Views Visibility
         if (tasks.isEmpty()) {
-            // Show Empty State
             bind.emptyNoteIcon.visibility = View.VISIBLE
             bind.emptyNoteText.visibility = View.VISIBLE
-
-            // Hide RecyclerView (Cleaner look)
             bind.recyclerViewTodo.visibility = View.GONE
         } else {
-            // Hide Empty State
             bind.emptyNoteIcon.visibility = View.GONE
             bind.emptyNoteText.visibility = View.GONE
-
-            // Show RecyclerView
             bind.recyclerViewTodo.visibility = View.VISIBLE
         }
 
         todoAdapter.updateTasks(tasks)
 
-        // 2. Apply dynamic fill color to the filter button
         applyFilterButtonColor()
-
-        // 3. Update the UI text of the dropdown button
         bind.filterDropdown.text = currentFilter.name.lowercase().replaceFirstChar { it.titlecase(Locale.getDefault()) }
     }
 
-    /**
-     * Helper function to determine and apply the solid fill color to the filter button.
-     */
     private fun applyFilterButtonColor() {
         val colorResId = when (currentFilter) {
             TaskFilter.ONGOING -> R.color.ongoing_border_fill_placeholder
@@ -131,7 +133,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-    // --- Button Listeners ---
     private fun setupListeners() {
         bind.addNotesBtn.setOnClickListener {
             if (isAdded && !childFragmentManager.isStateSaved) {

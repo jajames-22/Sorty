@@ -4,21 +4,22 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.view.LayoutInflater // Added
+import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup // Added
+import android.view.ViewGroup
 import android.view.Window
-import android.widget.ImageView // Added
-import android.widget.TextView // Added
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.recyclerview.widget.RecyclerView // Added for Adapter
+import androidx.recyclerview.widget.RecyclerView
 import com.example.sorty.databinding.ActivityMainBinding
-import com.google.android.material.tabs.TabLayoutMediator // Added for Dots
+import com.google.android.material.tabs.TabLayoutMediator
 import com.example.sorty.ui.home.Home
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var bind: ActivityMainBinding
@@ -26,14 +27,26 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 0. CHECK SESSION: If logged in, skip to Home immediately
-        val sessionManager = SessionManager(this)
-        if (sessionManager.isLoggedIn()) {
-            val intent = Intent(this, Home::class.java)
-            startActivity(intent)
-            finish() // Close MainActivity so user can't go back to it
-            return // Stop loading the rest of the UI
+        // 0. SHARED PREFERENCES SETUP
+        val prefs = getSharedPreferences("SortyPrefs", MODE_PRIVATE)
+        val hasAccount = prefs.getBoolean("has_account", false)
+        val isLoggedIn = prefs.getBoolean("is_logged_in", false) // Optional: If you use this for Home check
+
+        // CHECK 1: If already logged in -> Go to Home
+        if (isLoggedIn) {
+            startActivity(Intent(this, Home::class.java))
+            finish()
+            return
         }
+
+        // CHECK 2: If they have an account (but not logged in) -> Go to Login
+        if (hasAccount) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
+
+        // --- If we reach here, the user has NO account. Show the Welcome/Carousel screen. ---
 
         // 1. ENABLE EDGE-TO-EDGE
         enableEdgeToEdge()
@@ -57,70 +70,44 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.hide()
 
         // =========================================================
-        // START: NEW CAROUSEL CODE (ViewPager2 + TabLayout)
+        // CAROUSEL CODE
         // =========================================================
-
-        // 1. Define your slides data
-        // Ensure you have a drawable named "sorty_logo" (or change to whatever icon you want per slide)
         val slides = listOf(
-            OnboardingItem(R.drawable.organize_logo, "Organize your files"),
+            OnboardingItem(R.drawable.organize_logo, "Organize your files"), // Make sure these drawables exist
             OnboardingItem(R.drawable.upload_logo,   "Upload Documents"),
             OnboardingItem(R.drawable.task_logo,     "Manage your tasks")
         )
 
-        // 2. Setup Adapter using ViewBinding
-        // Note: bind.viewPager comes from the ID in activity_main.xml
         val adapter = OnboardingAdapter(slides)
         bind.viewPager.adapter = adapter
 
-        // 3. Attach Tabs (The Dots)
-        // Note: bind.tabLayout comes from the ID in activity_main.xml
-        TabLayoutMediator(bind.tabLayout, bind.viewPager) { _, _ ->
-            // No text needed in the tabs, just dots
-        }.attach()
+        TabLayoutMediator(bind.tabLayout, bind.viewPager) { _, _ -> }.attach()
 
         // =========================================================
-        // END: NEW CAROUSEL CODE
+        // BUTTON LOGIC
         // =========================================================
 
-        val createacc = bind.createAcc
-
-        createacc.setOnClickListener {
+        bind.createAcc.setOnClickListener {
             val intent = Intent(this, CreateAccount::class.java)
             startActivity(intent)
         }
+
+        // OPTIONAL: You should add a Login button to activity_main.xml for users
+        // who re-installed the app but already have an account.
+        // bind.btnLogin.setOnClickListener {
+        //     startActivity(Intent(this, LoginActivity::class.java))
+        // }
     }
 
-    /**
-     * Helper function for system bars
-     */
     private fun setSystemBarAppearance(window: Window, isLight: Boolean) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val controller = WindowCompat.getInsetsController(window, window.decorView)
-            controller.isAppearanceLightStatusBars = isLight
-            controller.isAppearanceLightNavigationBars = isLight
-        } else {
-            val decorView = window.decorView
-            var flags = decorView.systemUiVisibility
-            if (isLight) {
-                flags = flags or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    flags = flags or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-                }
-            } else {
-                flags = flags and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    flags = flags and View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
-                }
-            }
-            decorView.systemUiVisibility = flags
-        }
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        controller.isAppearanceLightStatusBars = isLight
+        controller.isAppearanceLightNavigationBars = isLight
     }
 }
 
 // =========================================================
-// HELPER CLASSES FOR THE CAROUSEL
-// You can keep these at the bottom of the file
+// HELPER CLASSES
 // =========================================================
 
 data class OnboardingItem(val image: Int, val title: String)
@@ -139,7 +126,6 @@ class OnboardingAdapter(private val items: List<OnboardingItem>) :
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): OnboardingViewHolder {
-        // IMPORTANT: Ensure you created 'item_onboarding.xml' in layout folder!
         return OnboardingViewHolder(
             LayoutInflater.from(parent.context).inflate(R.layout.item_onboarding, parent, false)
         )

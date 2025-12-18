@@ -224,7 +224,42 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- FIXED: Removed password attributes -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/input_password"
+        style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="24dp"
+        app:boxBackgroundColor="#E0E0E0"
+        app:boxCornerRadiusBottomEnd="30dp"
+        app:boxCornerRadiusBottomStart="30dp"
+        app:boxCornerRadiusTopEnd="30dp"
+        app:boxCornerRadiusTopStart="30dp"
+        app:boxStrokeColor="@color/transparent"
+        app:boxStrokeWidth="0dp"
+        app:cursorColor="@color/dark_grey"
+        app:hintEnabled="false"
+        app:endIconMode="password_toggle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/input_email">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/poppins"
+            android:hint="Password"
+            android:includeFontPadding="false"
+            android:inputType="textPassword"
+            android:padding="13dp"
+            android:textColor="@color/primary_green"
+            android:textColorHint="@color/dark_grey"
+            android:textSize="15sp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/input_school"
         style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
@@ -244,7 +279,7 @@
         app:hintEnabled="false"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/input_email">
+        app:layout_constraintTop_toBottomOf="@id/input_password">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/edit_school"
@@ -260,7 +295,6 @@
             android:textSize="15sp" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- FIXED: Removed password attributes -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/input_course"
         style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"

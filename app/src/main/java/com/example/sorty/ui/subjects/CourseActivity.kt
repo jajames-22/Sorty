@@ -1,10 +1,14 @@
 package com.example.sorty.ui.subjects
 
 import android.content.Intent
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
-import android.provider.OpenableColumns // 👈 This import is needed for the helper function
+import android.provider.OpenableColumns
 import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
@@ -24,17 +28,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.sorty.DatabaseHelper
 import com.example.sorty.R
+import com.example.sorty.SessionManager // 👈 IMPORT THIS
+import com.example.sorty.data.models.SubjectFile
 import com.example.sorty.ui.home.TaskDetailFragment
 import com.example.sorty.ui.home.TaskFilter
 import com.example.sorty.ui.home.TodoAdapter
 import com.example.sorty.ui.home.addNotes
 import com.google.android.material.snackbar.Snackbar
 import java.util.Locale
-import com.example.sorty.data.models.SubjectFile
-import android.graphics.Canvas
-import android.graphics.drawable.ColorDrawable
-import android.graphics.Paint
-import android.graphics.RectF
 
 class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener {
 
@@ -66,11 +67,14 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
     private lateinit var fileAdapter: FileAdapter
 
     private lateinit var dbHelper: DatabaseHelper
+    private lateinit var sessionManager: SessionManager // 👈 ADD THIS
+
     private var currentCourseId: Int = -1
     private var currentCourseName: String = ""
     private var currentCourseDesc: String = ""
     private var currentCourseColor: String = "#FFFFFF"
     private var currentFilter: TaskFilter = TaskFilter.ONGOING
+    private var currentUserEmail: String = "" // 👈 ADD THIS
 
     // File Picker
     private val pickFileLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
@@ -78,10 +82,11 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
             val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
             contentResolver.takePersistableUriPermission(uri, takeFlags)
 
-            val fileName = getFileNameFromUri(uri) // This function is defined below
+            val fileName = getFileNameFromUri(uri)
             val fileType = contentResolver.getType(uri) ?: "application/octet-stream"
 
-            val success = dbHelper.insertFile(fileName, uri.toString(), fileType, currentCourseName)
+            // 👇 FIX 1: Pass currentUserEmail
+            val success = dbHelper.insertFile(currentUserEmail, fileName, uri.toString(), fileType, currentCourseName)
 
             if (success) {
                 Snackbar.make(bgSubject, "File Added: $fileName", Snackbar.LENGTH_SHORT)
@@ -102,7 +107,10 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
         supportActionBar?.hide()
         setContentView(R.layout.activity_course)
 
+        // Initialize Helpers
         dbHelper = DatabaseHelper(this)
+        sessionManager = SessionManager(this) // 👈 Initialize Session
+        currentUserEmail = sessionManager.getEmail() ?: "" // 👈 Get Email
 
         window.navigationBarColor = Color.WHITE
         val windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
@@ -190,12 +198,9 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
     }
 
     private fun setupFileRecyclerView() {
-        // 👇 FIXED: Explicitly tell it this is a list of SubjectFile
         fileAdapter = FileAdapter(emptyList<SubjectFile>()) { file ->
             try {
                 val intent = Intent(Intent.ACTION_VIEW)
-
-                // Now 'file' is recognized as SubjectFile, so .uri and .type work
                 intent.setDataAndType(Uri.parse(file.uri), file.type)
                 intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 startActivity(intent)
@@ -209,15 +214,21 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
     }
 
     fun loadCourseTasks() {
+        if (currentUserEmail.isEmpty()) return
+
         val currentTime = System.currentTimeMillis()
+
+        // 👇 FIX 2: Pass currentUserEmail to all these functions
         val statusTasks = when (currentFilter) {
-            TaskFilter.ONGOING -> dbHelper.getOngoingTasks(currentTime)
-            TaskFilter.COMPLETED -> dbHelper.getCompletedTasks()
-            TaskFilter.MISSED -> dbHelper.getMissedTasks(currentTime)
+            TaskFilter.ONGOING -> dbHelper.getOngoingTasks(currentUserEmail, currentTime)
+            TaskFilter.COMPLETED -> dbHelper.getCompletedTasks(currentUserEmail)
+            TaskFilter.MISSED -> dbHelper.getMissedTasks(currentUserEmail, currentTime)
         }
+
         val finalTasks = statusTasks.filter {
             it.category.equals(currentCourseName, ignoreCase = true)
         }
+
         tvFilterOngoing.text = currentFilter.name.lowercase().replaceFirstChar { it.titlecase(Locale.getDefault()) }
         if (finalTasks.isEmpty()) {
             rvTodoList.visibility = View.GONE
@@ -230,7 +241,10 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
     }
 
     private fun loadCourseFiles() {
-        val files = dbHelper.getFilesForSubject(currentCourseName)
+        if (currentUserEmail.isEmpty()) return
+
+        // 👇 FIX 3: Pass currentUserEmail
+        val files = dbHelper.getFilesForSubject(currentUserEmail, currentCourseName)
 
         if (files.isEmpty()) {
             rvFilesList.visibility = View.GONE
@@ -312,6 +326,7 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
             loadCourseFiles()
         }
     }
+
     private fun setupSwipeToDelete() {
         val deleteIcon = ContextCompat.getDrawable(this, R.drawable.baseline_delete_outline_24)!!
         val paint = Paint().apply {
@@ -332,7 +347,6 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
                 c: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
                 dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean
             ) {
-                // (Your existing drawing code remains the same here)
                 val itemView = viewHolder.itemView
                 val itemHeight = itemView.bottom - itemView.top
                 val verticalMargin = (itemHeight * 0.15).toInt()
@@ -376,16 +390,13 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
                 val position = viewHolder.adapterPosition
                 val fileToDelete = fileAdapter.getFileAt(position)
 
-                // 👇 1. INFLATE CUSTOM DIALOG LAYOUT
                 val dialogView = layoutInflater.inflate(R.layout.dialog_confirm_save, null)
                 val builder = android.app.AlertDialog.Builder(this@CourseActivity)
                 builder.setView(dialogView)
                 val dialog = builder.create()
 
-                // 👇 2. MAKE BACKGROUND TRANSPARENT
                 dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
-                // 👇 3. CUSTOMIZE TEXT FOR DELETION
                 val tvTitle = dialogView.findViewById<TextView>(R.id.tv_title)
                 val tvMessage = dialogView.findViewById<TextView>(R.id.tv_message)
                 val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
@@ -394,12 +405,11 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
                 tvTitle.text = "Delete File"
                 tvMessage.text = "Are you sure you want to delete '${fileToDelete.name}'?"
                 btnConfirm.text = "Delete"
-                btnConfirm.backgroundTintList = ContextCompat.getColorStateList(this@CourseActivity, android.R.color.holo_red_dark) // Change button color to red
+                btnConfirm.backgroundTintList = ContextCompat.getColorStateList(this@CourseActivity, android.R.color.holo_red_dark)
 
-                // 👇 4. BUTTON LISTENERS
                 btnCancel.setOnClickListener {
                     dialog.dismiss()
-                    fileAdapter.notifyItemChanged(position) // Reset swipe
+                    fileAdapter.notifyItemChanged(position)
                 }
 
                 btnConfirm.setOnClickListener {
@@ -417,7 +427,6 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
                     dialog.dismiss()
                 }
 
-                // Handle dialog cancellation (clicking outside)
                 dialog.setOnCancelListener {
                     fileAdapter.notifyItemChanged(position)
                 }
@@ -430,7 +439,6 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
         itemTouchHelper.attachToRecyclerView(rvFilesList)
     }
 
-    // 👇 THIS IS THE MISSING FUNCTION
     private fun getFileNameFromUri(uri: Uri): String {
         var result: String? = null
         if (uri.scheme == "content") {

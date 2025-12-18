@@ -1,29 +1,29 @@
 package com.example.sorty.ui.account
 
+import android.app.AlertDialog
+import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.sorty.DatabaseHelper
-import com.example.sorty.CreateAccount
-import com.example.sorty.databinding.FragmentAccountBinding
-import android.content.Intent
-import com.example.sorty.ui.account.SetupPinActivity
-import android.app.AlertDialog
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
-import android.widget.Button
-import android.widget.TextView
+import com.example.sorty.LoginActivity
+import com.example.sorty.MainActivity
 import com.example.sorty.R
+import com.example.sorty.SessionManager
+import com.example.sorty.databinding.FragmentAccountBinding
 
 class AccountFragment : Fragment() {
 
     private lateinit var bind: FragmentAccountBinding
     private lateinit var db: DatabaseHelper
-    private lateinit var sessionManager: com.example.sorty.SessionManager // Add this
+    private lateinit var sessionManager: SessionManager
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,139 +37,133 @@ class AccountFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Initialize Database
+        // 1. Initialize Database & Session
         db = DatabaseHelper(requireContext())
-        sessionManager = com.example.sorty.SessionManager(requireContext())
+        sessionManager = SessionManager(requireContext())
+
         setupButtons()
     }
 
-    private fun loadUserData() {
-        // Fetch the user from the database
-        val user = db.getUser()
-
-        if (user != null) {
-            // --- POPULATE ID CARD ---
-            bind.tvIdName.text = "${user.firstName} ${user.lastName}"
-            bind.tvIdCourse.text = user.course
-            bind.tvIdSchool.text = user.school
-            bind.tvIdEmail.text = user.email
-            bind.tvIdBday.text = "Born: ${user.birthday}"
-
-            // Handle Profile Picture
-            if (!user.imageUri.isNullOrEmpty()) {
-                try {
-                    bind.ivProfilePic.setImageURI(Uri.parse(user.imageUri))
-                } catch (e: Exception) {
-                    // If image fails to load, keep the placeholder
-                    e.printStackTrace()
-                }
-            }
-        } else {
-            // --- HANDLE EMPTY STATE ---
-            bind.tvIdName.text = "No Profile Set"
-            bind.tvIdCourse.text = "----"
-            bind.tvIdSchool.text = "----"
-        }
-    }
-
-    // ADD THIS FUNCTION
     override fun onResume() {
         super.onResume()
-        // This runs every time the screen becomes visible again
         loadUserData()
+    }
+
+    private fun loadUserData() {
+        val currentEmail = sessionManager.getEmail()
+
+        if (currentEmail != null) {
+            val user = db.getUserByEmail(currentEmail)
+
+            if (user != null) {
+                bind.tvIdName.text = "${user.firstName} ${user.lastName}"
+                bind.tvIdCourse.text = user.course
+                bind.tvIdSchool.text = user.school
+                bind.tvIdEmail.text = user.email
+                bind.tvIdBday.text = "Born: ${user.birthday}"
+
+                if (!user.imageUri.isNullOrEmpty()) {
+                    try {
+                        bind.ivProfilePic.setImageURI(Uri.parse(user.imageUri))
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            } else {
+                bind.tvIdName.text = "User Not Found"
+            }
+        } else {
+            bind.tvIdName.text = "No Session Found"
+        }
     }
 
     private fun setupButtons() {
         // Setup Password Button
         bind.btnSetupPassword.setOnClickListener {
-            val intent = Intent(requireContext(), com.example.sorty.ui.account.SetupPinActivity::class.java)
+            val intent = Intent(requireContext(), SetupPinActivity::class.java)
             startActivity(intent)
         }
 
         // Reset Account Button
         bind.btnResetAccount.setOnClickListener {
-            showResetConfirmationDialog() // <--- Check this line
+            showResetConfirmationDialog()
         }
 
-
-
-        // EDIT ICON NAVIGATION
+        // Edit Profile Button
         bind.btnEditId.setOnClickListener {
-            // 1. Create the Intent
-            // Make sure to import android.content.Intent
-            val intent = android.content.Intent(requireContext(), EditProfileActivity::class.java)
-
-            // 2. Start the Activity
+            val intent = Intent(requireContext(), EditProfileActivity::class.java)
             startActivity(intent)
+        }
+
+        // Logout Button
+        bind.btnLogout.setOnClickListener {
+            performLogout()
         }
     }
 
+    private fun performLogout() {
+        sessionManager.logout()
+        Toast.makeText(requireContext(), "Logged out successfully", Toast.LENGTH_SHORT).show()
+
+        val intent = Intent(requireContext(), LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+    }
+
     private fun showResetConfirmationDialog() {
-        // DEBUG: Uncomment this if you suspect the button isn't clicking
-        // Toast.makeText(requireContext(), "Opening Dialog...", Toast.LENGTH_SHORT).show()
-
         try {
-            // 1. Inflate the View
             val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_reset_confirmation, null)
-
-            // 2. Build the Dialog
             val builder = AlertDialog.Builder(requireContext())
             builder.setView(dialogView)
 
-            // 3. Create and Show
             val dialog = builder.create()
+            dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            dialog.show()
 
-            // Important: This makes the corners rounded by removing the default square white box
-            dialog.window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+            val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
+            val btnConfirm = dialogView.findViewById<Button>(R.id.btn_confirm)
 
-            dialog.show() // <--- MAKE SURE THIS IS CALLED
-
-            // 4. Initialize Buttons INSIDE the dialog view
-            val btnCancel = dialogView.findViewById<android.widget.Button>(R.id.btn_cancel)
-            val btnConfirm = dialogView.findViewById<android.widget.Button>(R.id.btn_confirm)
-
-            // 5. Button Logic
             btnCancel.setOnClickListener {
                 dialog.dismiss()
             }
 
             btnConfirm.setOnClickListener {
-                performDataReset()
                 dialog.dismiss()
+                // Call the safe reset function
+                performDataReset()
             }
 
         } catch (e: Exception) {
-            // This will tell you if the XML file is missing or has an error
             e.printStackTrace()
             Toast.makeText(requireContext(), "Error opening dialog: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
+    // 👇 THIS IS THE KEY FIX 👇
     private fun performDataReset() {
-        // 1. Run in Background Thread
+        // 1. Get the current user's email
+        val currentEmail = sessionManager.getEmail()
+
+        if (currentEmail.isNullOrEmpty()) {
+            Toast.makeText(requireContext(), "Error: No user currently logged in.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         Thread {
-            // Delete DB Data
-            val success = db.resetAccountData()
+            // 2. Pass the email to the safe delete function
+            // This ensures ONLY this user's data is wiped
+            val success = db.resetUserData(currentEmail)
 
             if (isAdded) {
                 requireActivity().runOnUiThread {
                     if (success) {
-                        // 2. Clear Session (Shared Preferences)
+                        // 3. If successful, Logout and redirect to Start
                         sessionManager.logout()
+                        Toast.makeText(requireContext(), "Your data has been reset.", Toast.LENGTH_SHORT).show()
 
-                        Toast.makeText(requireContext(), "Account reset successfully.", Toast.LENGTH_SHORT).show()
-
-                        // 3. NAVIGATE TO MAIN ACTIVITY (The Change)
-                        // Make sure to import com.example.sorty.MainActivity at the top
-                        val intent = Intent(requireContext(), com.example.sorty.MainActivity::class.java)
-
-                        // Clear the back stack (History) so the user cannot go back
+                        val intent = Intent(requireContext(), MainActivity::class.java)
                         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-
                         startActivity(intent)
-
-                        // Optional: Kill process to ensure a completely fresh start
-                        // android.os.Process.killProcess(android.os.Process.myPid())
                     } else {
                         Toast.makeText(requireContext(), "Failed to reset data.", Toast.LENGTH_SHORT).show()
                     }

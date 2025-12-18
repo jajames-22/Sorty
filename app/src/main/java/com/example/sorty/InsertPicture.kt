@@ -1,28 +1,23 @@
 package com.example.sorty
 
-// --- 1. Standard Android Imports ---
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import java.io.File
 
-// --- 2. Activity & UI Imports ---
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 
-// --- 3. Photo Picker & Result Imports ---
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 
-// --- 4. Binding Import ---
 import com.example.sorty.databinding.ActivityInsertPictureBinding
 import com.example.sorty.ui.home.Home
 
-// --- 5. uCrop Import ---
 import com.yalantis.ucrop.UCrop
 
 class InsertPicture : AppCompatActivity() {
@@ -66,7 +61,6 @@ class InsertPicture : AppCompatActivity() {
         val windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
         windowInsetsController.isAppearanceLightStatusBars = false
 
-        // 👇 FIXED: Changed 'bind.main' to 'bind.root'
         ViewCompat.setOnApplyWindowInsetsListener(bind.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
@@ -90,17 +84,26 @@ class InsertPicture : AppCompatActivity() {
             val lastName = intent.getStringExtra("EXTRA_LAST") ?: ""
             val bday = intent.getStringExtra("EXTRA_BDAY") ?: ""
             val email = intent.getStringExtra("EXTRA_EMAIL") ?: ""
+            // 👇 GET PASSWORD FROM INTENT
+            val password = intent.getStringExtra("EXTRA_PASSWORD") ?: ""
             val school = intent.getStringExtra("EXTRA_SCHOOL") ?: ""
             val course = intent.getStringExtra("EXTRA_COURSE") ?: ""
 
             val imageUriString = selectedImageUri?.toString() ?: ""
 
-            // 👇 ENABLED DATABASE SAVING
             val db = DatabaseHelper(this)
-            val success = db.insertUser(firstName, lastName, bday, email, school, course, imageUriString)
+
+            // 👇 UPDATED: Passed 'password' as the 5th argument
+            val success = db.insertUser(firstName, lastName, bday, email, password, school, course, imageUriString)
 
             if (success) {
-                sessionManager.setLogin(true)
+                // ❌ REMOVE THIS LINE:
+                // sessionManager.setLogin(true)
+
+                // ✅ REPLACE WITH THIS:
+                // This saves the email so the app knows WHICH user is logged in
+                sessionManager.createLoginSession(email)
+
                 Toast.makeText(this, "Account Created Successfully!", Toast.LENGTH_SHORT).show()
 
                 val homeIntent = Intent(this, Home::class.java)
