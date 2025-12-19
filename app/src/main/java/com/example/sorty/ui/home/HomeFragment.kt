@@ -49,6 +49,12 @@ class HomeFragment : Fragment() {
 
         setupRecyclerView()
         setupListeners()
+
+        parentFragmentManager.setFragmentResultListener("task_updated", viewLifecycleOwner) { _, bundle ->
+            if (bundle.getBoolean("refresh")) {
+                loadTasksFromDatabase()
+            }
+        }
         loadTasksFromDatabase()
     }
 
@@ -137,10 +143,9 @@ class HomeFragment : Fragment() {
 
     private fun setupListeners() {
         bind.addNotesBtn.setOnClickListener {
-            if (isAdded && !childFragmentManager.isStateSaved) {
-                // Assuming addNotes() is a function that returns a BottomSheetDialogFragment
+            if (isAdded && !parentFragmentManager.isStateSaved) {
                 val bottomSheet = addNotes()
-                bottomSheet.show(childFragmentManager, "AddNotesSheet")
+                bottomSheet.show(parentFragmentManager, "AddNotesSheet")
             }
         }
 
