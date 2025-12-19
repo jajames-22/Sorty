@@ -14,7 +14,7 @@ import com.example.sorty.data.models.User
 
 // 1. UPDATED DATABASE VERSION TO 7 (Schema Change)
 class DatabaseHelper(context: Context) :
-    SQLiteOpenHelper(context, "sorty.db", null, 7) {
+    SQLiteOpenHelper(context, "sorty.db", null, 10) {
 
     companion object {
         // Common Column
@@ -187,6 +187,15 @@ class DatabaseHelper(context: Context) :
         }
         cursor.close()
         return user
+    }
+
+    fun updateUserImage(email: String, imageUri: String): Boolean {
+        val db = this.writableDatabase
+        val contentValues = ContentValues()
+        contentValues.put("image_uri", imageUri) // Ensure this column name matches your table
+
+        val result = db.update("users", contentValues, "email = ?", arrayOf(email))
+        return result > 0
     }
 
     // Inside your DatabaseHelper class

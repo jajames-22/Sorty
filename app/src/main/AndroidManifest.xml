@@ -24,10 +24,12 @@
             android:exported="false" />
         <activity
             android:name=".ui.account.SetupPin"
-            android:exported="false" />
+            android:exported="false"
+            tools:ignore="MissingClass" />
         <activity
             android:name=".ui.subjects.FileAdapter"
-            android:exported="false" />
+            android:exported="false"
+            tools:ignore="Instantiatable" />
         <activity android:name=".ui.subjects.CourseActivity" />
         <activity
             android:name=".InsertPicture"

@@ -24,6 +24,7 @@ class InsertPicture : AppCompatActivity() {
 
     private lateinit var bind: ActivityInsertPictureBinding
     private lateinit var sessionManager: SessionManager
+    private lateinit var db: DatabaseHelper
 
     private var selectedImageUri: Uri? = null
 
@@ -57,6 +58,7 @@ class InsertPicture : AppCompatActivity() {
         setContentView(bind.root)
 
         sessionManager = SessionManager(this)
+        db = DatabaseHelper(this)
 
         val windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
         windowInsetsController.isAppearanceLightStatusBars = false
@@ -72,40 +74,37 @@ class InsertPicture : AppCompatActivity() {
 
     private fun setupListeners() {
         bind.backbtnpic.setOnClickListener {
-            finish()
+            // Since account is already created, back just takes them home
+            navigateToHome()
         }
 
         bind.btnChangePhoto.setOnClickListener {
             pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         }
 
+        // "Skip" or "Continue" logic
         bind.buttonContinue2.setOnClickListener {
-            val firstName = intent.getStringExtra("EXTRA_FIRST") ?: "User"
-            val lastName = intent.getStringExtra("EXTRA_LAST") ?: ""
-            val bday = intent.getStringExtra("EXTRA_BDAY") ?: ""
             val email = intent.getStringExtra("EXTRA_EMAIL") ?: ""
-            val password = intent.getStringExtra("EXTRA_PASSWORD") ?: ""
-            val school = intent.getStringExtra("EXTRA_SCHOOL") ?: ""
-            val course = intent.getStringExtra("EXTRA_COURSE") ?: ""
             val imageUriString = selectedImageUri?.toString() ?: ""
 
-            val db = DatabaseHelper(this)
-
-            val success = db.insertUser(firstName, lastName, bday, email, password, school, course, imageUriString)
-
-            if (success) {
-                // ✅ UPDATED: Use the new method that accepts both email and firstName
-                sessionManager.createLoginSession(email, firstName)
-
-                Toast.makeText(this, "Account Created Successfully!", Toast.LENGTH_SHORT).show()
-
-                val homeIntent = Intent(this, Home::class.java)
-                homeIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(homeIntent)
-            } else {
-                Toast.makeText(this, "Failed to create account", Toast.LENGTH_SHORT).show()
+            if (imageUriString.isNotEmpty() && email.isNotEmpty()) {
+                // 👇 UPDATE existing user with the image
+                val success = db.updateUserImage(email, imageUriString)
+                if (success) {
+                    Toast.makeText(this, "Profile Picture Updated!", Toast.LENGTH_SHORT).show()
+                }
             }
+
+            // Navigate to Home regardless (photo is optional)
+            navigateToHome()
         }
+    }
+
+    private fun navigateToHome() {
+        val homeIntent = Intent(this, Home::class.java)
+        homeIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(homeIntent)
+        finish()
     }
 
     private fun startCrop(uri: Uri) {
