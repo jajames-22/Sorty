@@ -13,11 +13,12 @@
         android:roundIcon="@drawable/sorty_logo_rounded"
         android:supportsRtl="true"
         android:theme="@style/Theme.Sorty">
-
+        <activity
+            android:name=".ui.subjects.ArchivesActivity"
+            android:exported="false" />
         <activity
             android:name=".ui.auth.EmailConfirmActivity"
             android:exported="false" />
-
         <activity
             android:name=".CreatePassword"
             android:exported="false" />
@@ -54,6 +55,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -66,7 +68,6 @@
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
-
     </application>
 
 </manifest>

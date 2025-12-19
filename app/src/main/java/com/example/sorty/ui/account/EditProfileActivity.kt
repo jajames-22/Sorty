@@ -8,6 +8,7 @@ import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -16,12 +17,16 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
 import com.example.sorty.DatabaseHelper
+import com.example.sorty.GMailSender
 import com.example.sorty.R
 import com.example.sorty.databinding.ActivityEditProfileBinding
-// Ensure you have this import for the User object type
-// import com.example.sorty.data.models.User
+import com.example.sorty.ui.auth.EmailConfirmActivity
 import com.yalantis.ucrop.UCrop
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Calendar
 
@@ -31,15 +36,11 @@ class EditProfileActivity : AppCompatActivity() {
     private lateinit var db: DatabaseHelper
     private var currentUserId: Int = -1
     private var selectedImageUri: String = ""
-
-    // 👇 1. Store the original user data to compare later
-    // Replace 'Any' with your actual User class type (e.g., com.example.sorty.data.models.User)
     private var originalUser: com.example.sorty.data.models.User? = null
 
+    // --- Image Picker & Cropper ---
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        if (uri != null) {
-            startCrop(uri)
-        }
+        if (uri != null) startCrop(uri)
     }
 
     private val cropImageLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -49,15 +50,12 @@ class EditProfileActivity : AppCompatActivity() {
                 selectedImageUri = resultUri.toString()
                 binding.ivProfilePreview.setImageURI(resultUri)
             }
-        } else if (result.resultCode == UCrop.RESULT_ERROR) {
-            Toast.makeText(this, "Crop failed!", Toast.LENGTH_SHORT).show()
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
         binding = ActivityEditProfileBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -75,25 +73,10 @@ class EditProfileActivity : AppCompatActivity() {
         setupListeners()
     }
 
-    private fun startCrop(uri: Uri) {
-        val destinationFileName = "cropped_profile_${System.currentTimeMillis()}.jpg"
-        val destinationUri = Uri.fromFile(File(cacheDir, destinationFileName))
-        val options = UCrop.Options()
-        options.setCircleDimmedLayer(true)
-        options.setToolbarColor(ContextCompat.getColor(this, R.color.primary_green))
-        options.setStatusBarColor(ContextCompat.getColor(this, R.color.primary_green))
-        options.setActiveControlsWidgetColor(ContextCompat.getColor(this, R.color.secondary_yellow))
-        options.setToolbarWidgetColor(Color.WHITE)
-        val uCrop = UCrop.of(uri, destinationUri).withOptions(options)
-        cropImageLauncher.launch(uCrop.getIntent(this))
-    }
-
     private fun loadUserData() {
         val user = db.getUser()
         if (user != null) {
-            // 👇 Store original state
             originalUser = user
-
             currentUserId = user.id
             selectedImageUri = user.imageUri ?: ""
 
@@ -104,12 +87,10 @@ class EditProfileActivity : AppCompatActivity() {
             binding.etSchool.setText(user.school)
             binding.etCourse.setText(user.course)
 
-            updatePreviewCard(user.firstName, user.lastName, user.birthday, user.email, user.school, user.course)
+            updatePreviewCard(user.firstName, user.lastName ?: "", user.birthday, user.email, user.school, user.course)
 
             if (!user.imageUri.isNullOrEmpty()) {
-                try {
-                    binding.ivProfilePreview.setImageURI(Uri.parse(user.imageUri))
-                } catch (e: Exception) { }
+                binding.ivProfilePreview.setImageURI(Uri.parse(user.imageUri))
             }
         }
     }
@@ -121,19 +102,135 @@ class EditProfileActivity : AppCompatActivity() {
         binding.btnSaveChanges.setOnClickListener { validateInputsAndConfirm() }
     }
 
+    private fun validateInputsAndConfirm() {
+        if (currentUserId == -1) return
+
+        val fName = binding.etFirstName.text.toString().trim()
+
+        // Only First Name is mandatory
+        if (fName.isEmpty()) {
+            Toast.makeText(this, "First Name is required", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        if (!hasChanges()) {
+            Toast.makeText(this, "No changes detected", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        showConfirmationDialog()
+    }
+
+    private fun showConfirmationDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_confirm_save, null)
+        val builder = AlertDialog.Builder(this)
+        builder.setView(dialogView)
+        val dialog = builder.create()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
+        val btnConfirm = dialogView.findViewById<Button>(R.id.btn_confirm)
+        val tvMessage = dialogView.findViewById<TextView>(R.id.tv_message)
+
+        tvMessage.text = "Do you want to save the changes to your profile?"
+
+        btnCancel.setOnClickListener { dialog.dismiss() }
+        btnConfirm.setOnClickListener {
+            dialog.dismiss()
+            performDatabaseUpdate()
+        }
+        dialog.show()
+    }
+
+    private fun performDatabaseUpdate() {
+        val fName = binding.etFirstName.text.toString().trim()
+        val lName = binding.etLastName.text.toString().trim()
+        val bday = binding.etBday.text.toString().trim()
+        val newEmail = binding.etEmail.text.toString().trim()
+        val school = binding.etSchool.text.toString().trim()
+        val course = binding.etCourse.text.toString().trim()
+
+        val emailChanged = newEmail != originalUser?.email
+
+        val success = db.updateUser(currentUserId, fName, lName, bday, newEmail, school, course, selectedImageUri)
+
+        if (success) {
+            if (emailChanged) {
+                sendNewVerification(fName, lName, bday, newEmail, school, course)
+            } else {
+                showSuccessModal(fName, lName, bday, newEmail, school, course)
+            }
+        } else {
+            Toast.makeText(this, "Failed to update profile", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun sendNewVerification(fName: String, lName: String, bday: String, email: String, school: String, course: String) {
+        val otp = (100000..999999).random().toString()
+        Toast.makeText(this, "Sending verification code...", Toast.LENGTH_SHORT).show()
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            val emailBody = "<h2>Verification Code</h2><p>Your Sorty update code is: <b>$otp</b></p>"
+            val sent = GMailSender.sendEmail(email, "Sorty Email Verification", emailBody)
+
+            withContext(Dispatchers.Main) {
+                if (sent) {
+                    showEmailVerificationNotice(fName, lName, bday, email, school, course, otp)
+                } else {
+                    Toast.makeText(this@EditProfileActivity, "Failed to send email", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun showEmailVerificationNotice(fName: String, lName: String, bday: String, email: String, school: String, course: String, otp: String) {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Verify New Email")
+        builder.setMessage("A verification code was sent to $email. Please verify to finish.")
+        builder.setCancelable(false)
+        builder.setPositiveButton("Verify Now") { _, _ ->
+            val intent = Intent(this, EmailConfirmActivity::class.java).apply {
+                putExtra("EXTRA_OTP", otp)
+                putExtra("EXTRA_FIRST", fName)
+                putExtra("EXTRA_LAST", lName)
+                putExtra("EXTRA_BDAY", bday)
+                putExtra("EXTRA_EMAIL", email)
+                putExtra("EXTRA_SCHOOL", school)
+                putExtra("EXTRA_COURSE", course)
+            }
+            startActivity(intent)
+            finish()
+        }
+        builder.show()
+    }
+
+    private fun hasChanges(): Boolean {
+        val user = originalUser ?: return true
+        return binding.etFirstName.text.toString().trim() != user.firstName ||
+                binding.etLastName.text.toString().trim() != (user.lastName ?: "") ||
+                binding.etEmail.text.toString().trim() != user.email ||
+                binding.etBday.text.toString().trim() != user.birthday ||
+                binding.etSchool.text.toString().trim() != user.school ||
+                binding.etCourse.text.toString().trim() != user.course ||
+                selectedImageUri != (user.imageUri ?: "")
+    }
+
+    private fun showSuccessModal(fName: String, lName: String, bday: String, email: String, school: String, course: String) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_success, null)
+        val dialog = AlertDialog.Builder(this).setView(dialogView).create()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        dialogView.findViewById<Button>(R.id.btn_dialog_ok).setOnClickListener {
+            dialog.dismiss()
+            finish()
+        }
+        dialog.show()
+    }
+
     private fun showDatePicker() {
-        val calendar = Calendar.getInstance()
-        val datePickerDialog = DatePickerDialog(
-            this,
-            { _, year, month, day ->
-                val date = "$day/${month + 1}/$year"
-                binding.etBday.setText(date)
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-        datePickerDialog.show()
+        val c = Calendar.getInstance()
+        DatePickerDialog(this, { _, y, m, d -> binding.etBday.setText("$d/${m + 1}/$y") },
+            c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)).show()
     }
 
     private fun updatePreviewCard(fName: String, lName: String, bday: String, email: String, school: String, course: String) {
@@ -144,125 +241,12 @@ class EditProfileActivity : AppCompatActivity() {
         binding.tvPreviewCourse.text = course
     }
 
-    // ----------------------------------------------------------------------
-    // 👇 NEW LOGIC FLOW
-    // ----------------------------------------------------------------------
-
-    // Step 1: Check for Changes
-    private fun hasChanges(): Boolean {
-        val user = originalUser ?: return true // If no original user, assume changes
-
-        val newFirstName = binding.etFirstName.text.toString().trim()
-        val newLastName = binding.etLastName.text.toString().trim()
-        val newBday = binding.etBday.text.toString().trim()
-        val newEmail = binding.etEmail.text.toString().trim()
-        val newSchool = binding.etSchool.text.toString().trim()
-        val newCourse = binding.etCourse.text.toString().trim()
-
-        val originalUri = user.imageUri ?: ""
-
-        return newFirstName != user.firstName ||
-                newLastName != user.lastName ||
-                newBday != user.birthday ||
-                newEmail != user.email ||
-                newSchool != user.school ||
-                newCourse != user.course ||
-                selectedImageUri != originalUri
-    }
-
-    // Step 2: Validate Inputs
-    private fun validateInputsAndConfirm() {
-        if (currentUserId == -1) {
-            Toast.makeText(this, "Error: No user found", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // 👇 Check if changes exist
-        if (!hasChanges()) {
-            Toast.makeText(this, "Please make changes to save", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val fName = binding.etFirstName.text.toString().trim()
-        val lName = binding.etLastName.text.toString().trim()
-
-        if (fName.isEmpty() || lName.isEmpty()) {
-            Toast.makeText(this, "Name Required", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // If valid and changed, show Confirmation Modal
-        showConfirmationDialog()
-    }
-
-    // Step 3: Show Confirmation Dialog
-    private fun showConfirmationDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_confirm_save, null)
-        val builder = AlertDialog.Builder(this)
-        builder.setView(dialogView)
-        val dialog = builder.create()
-
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-        val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
-        val btnConfirm = dialogView.findViewById<Button>(R.id.btn_confirm)
-
-        btnCancel.setOnClickListener {
-            dialog.dismiss()
-        }
-
-        btnConfirm.setOnClickListener {
-            dialog.dismiss()
-            performDatabaseUpdate()
-        }
-
-        dialog.show()
-    }
-
-    // Step 4: Actual Database Update
-    private fun performDatabaseUpdate() {
-        val fName = binding.etFirstName.text.toString().trim()
-        val lName = binding.etLastName.text.toString().trim()
-        val bday = binding.etBday.text.toString().trim()
-        val email = binding.etEmail.text.toString().trim()
-        val school = binding.etSchool.text.toString().trim()
-        val course = binding.etCourse.text.toString().trim()
-
-        val success = db.updateUser(currentUserId, fName, lName, bday, email, school, course, selectedImageUri)
-
-        if (success) {
-            showSuccessModal(fName, lName, bday, email, school, course)
-        } else {
-            Toast.makeText(this, "Failed to update", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    // Step 5: Show Success Modal & Finish
-    private fun showSuccessModal(fName: String, lName: String, bday: String, email: String, school: String, course: String) {
-
-        // 👇 FIX 1: Inflate 'dialog_success', NOT 'dialog_confirm_save'
-        val dialogView = layoutInflater.inflate(R.layout.dialog_success, null)
-
-        val builder = AlertDialog.Builder(this)
-        builder.setView(dialogView)
-        val dialog = builder.create()
-
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.setCancelable(false)
-
-        // 👇 FIX 2: Use the ID from dialog_success.xml (btn_dialog_ok)
-        val btnOk = dialogView.findViewById<Button>(R.id.btn_dialog_ok)
-
-        btnOk.setOnClickListener {
-            dialog.dismiss()
-
-            // Update UI (Visual confirmation before closing)
-            updatePreviewCard(fName, lName, bday, email, school, course)
-
-            // 👇 FIX 3: Go back to the previous activity
-            finish()
-        }
-
-        dialog.show()
+    private fun startCrop(uri: Uri) {
+        val destinationUri = Uri.fromFile(File(cacheDir, "cropped_image.jpg"))
+        val uCrop = UCrop.of(uri, destinationUri).withOptions(UCrop.Options().apply {
+            setCircleDimmedLayer(true)
+            setToolbarColor(ContextCompat.getColor(this@EditProfileActivity, R.color.primary_green))
+        })
+        cropImageLauncher.launch(uCrop.getIntent(this))
     }
 }

@@ -71,12 +71,14 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
     private lateinit var dbHelper: DatabaseHelper
     private lateinit var sessionManager: SessionManager
 
+
     private var currentCourseId: Int = -1
     private var currentCourseName: String = ""
     private var currentCourseDesc: String = ""
     private var currentCourseColor: String = "#FFFFFF"
     private var currentFilter: TaskFilter = TaskFilter.ONGOING
     private var currentUserEmail: String = ""
+    private var isCurrentlyArchived: Boolean = false
 
     // File Picker
     private val pickFileLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
@@ -171,6 +173,11 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
                 currentCourseName = subject.name
                 currentCourseDesc = subject.description
                 currentCourseColor = subject.color
+
+                // 👇 Store the archive status (Assuming your Subject model has isArchived)
+                // If your model doesn't have it yet, ensure getSubjectById returns the is_archived column
+                isCurrentlyArchived = subject.isArchived
+
                 tvSubjectName.text = currentCourseName
                 tvSubjectDescription.text = currentCourseDesc
                 try {
@@ -223,7 +230,15 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
             TaskFilter.MISSED -> dbHelper.getMissedTasks(currentUserEmail, currentTime)
         }
         val finalTasks = statusTasks.filter { it.category.equals(currentCourseName, ignoreCase = true) }
+        tvFilterOngoing.backgroundTintList = null
+
+        // Update Filter Text
         tvFilterOngoing.text = currentFilter.name.lowercase().replaceFirstChar { it.titlecase(Locale.getDefault()) }
+
+        // 👇 Set the background and ensure text is visible (Green or Black on White)
+        tvFilterOngoing.setBackgroundResource(R.drawable.bg_edit_button)
+        tvFilterOngoing.setTextColor(ContextCompat.getColor(this, R.color.black))
+
         if (finalTasks.isEmpty()) {
             rvTodoList.visibility = View.GONE
             layoutEmptyState.visibility = View.VISIBLE
@@ -264,22 +279,52 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
     private fun showOptionsMenu(view: View) {
         val popup = PopupMenu(this, view)
         popup.menuInflater.inflate(R.menu.subject_options_menu, popup.menu)
+
+        // 1. Dynamic Menu Text: Check if the subject is currently archived
+        val archiveItem = popup.menu.findItem(R.id.action_archive_subject)
+        if (isCurrentlyArchived) {
+            archiveItem.title = "Remove from Archive"
+        } else {
+            archiveItem.title = "Move to Archive"
+        }
+
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.action_edit_subject -> {
-                    val bottomSheet = AddNewSubject.newInstance(currentCourseId, currentCourseName, currentCourseDesc, currentCourseColor)
+                    val bottomSheet = AddNewSubject.newInstance(
+                        currentCourseId,
+                        currentCourseName,
+                        currentCourseDesc,
+                        currentCourseColor
+                    )
                     bottomSheet.setAddNewSubjectListener(this)
                     bottomSheet.show(supportFragmentManager, "EditSubject")
                     true
                 }
+
                 R.id.action_archive_subject -> {
-                    archiveSubjectConfirmation()
+                    if (isCurrentlyArchived) {
+                        // 2. Handle Unarchive Logic
+                        val success = dbHelper.unarchiveSubject(currentCourseId)
+                        if (success) {
+                            Toast.makeText(this, "Subject removed from archive", Toast.LENGTH_SHORT).show()
+                            // Return to the previous screen (Archives list) to see it removed
+                            finish()
+                        } else {
+                            Toast.makeText(this, "Failed to unarchive", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        // 3. Handle Archive Logic (Shows confirmation dialog)
+                        archiveSubjectConfirmation()
+                    }
                     true
                 }
+
                 R.id.action_share_subject -> {
                     shareSubject()
                     true
                 }
+
                 else -> false
             }
         }
@@ -330,10 +375,21 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
         btnConfirm.text = "Archive"
 
         btnCancel.setOnClickListener { dialog.dismiss() }
+
         btnConfirm.setOnClickListener {
-            Toast.makeText(this, "Subject Archived (Pending Backend)", Toast.LENGTH_SHORT).show()
-            dialog.dismiss()
-            finish()
+            // 👇 ACTUAL ARCHIVE LOGIC START
+            val success = dbHelper.archiveSubject(currentCourseId)
+
+            if (success) {
+                Toast.makeText(this, "$currentCourseName moved to Archives", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+
+                // Go back to the Subjects list
+                finish()
+            } else {
+                Toast.makeText(this, "Failed to archive subject", Toast.LENGTH_SHORT).show()
+            }
+            // 👆 ACTUAL ARCHIVE LOGIC END
         }
         dialog.show()
     }

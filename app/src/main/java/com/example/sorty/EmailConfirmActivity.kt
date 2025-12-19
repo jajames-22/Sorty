@@ -6,7 +6,6 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.KeyEvent
 import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -14,43 +13,47 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.sorty.InsertPicture
+import com.example.sorty.SessionManager
 import com.example.sorty.databinding.ActivityEmailConfirmBinding
+import com.example.sorty.ui.home.Home
 
 class EmailConfirmActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityEmailConfirmBinding
     private lateinit var otpBoxes: Array<EditText>
+    private lateinit var sessionManager: SessionManager
     private var generatedOtp: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 1. Enable Edge-to-Edge BEFORE setting content view
+        // 1. UI Setup
         enableEdgeToEdge()
-
         binding = ActivityEmailConfirmBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.hide()
 
-        // 2. Fix Status Bar Icon Contrast (Set to White)
-        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        windowInsetsController.isAppearanceLightStatusBars = false // false = white icons
+        // 2. Initialize Helpers
+        sessionManager = SessionManager(this)
 
-        // 3. Apply System Bars Padding (Prevents overlapping with clock/battery)
+        // 3. Status Bar & Window Insets
+        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+        windowInsetsController.isAppearanceLightStatusBars = false // White icons for green background
+
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
+        // 4. Data Retrieval
         generatedOtp = intent.getStringExtra("EXTRA_OTP")
-
-        // Retrieve and display email
         val userEmail = intent.getStringExtra("EXTRA_EMAIL")
         binding.tvEmailDisplay.text = userEmail ?: "your email"
 
         setupOtpLogic()
 
+        // 5. Button Listeners
         binding.btnBack.setOnClickListener { finish() }
 
         binding.btnContinue.setOnClickListener {
@@ -65,12 +68,12 @@ class EmailConfirmActivity : AppCompatActivity() {
 
     private fun setupOtpLogic() {
         try {
-            // Using ID 'otp_container' from the XML update I gave you earlier
+            // Access the LinearLayout containing the 6 EditTexts
             val otpContainer = binding.otpContainer
-
             otpBoxes = Array(6) { i -> otpContainer.getChildAt(i) as EditText }
 
             for (i in 0 until 6) {
+                // Move focus forward when typing
                 otpBoxes[i].addTextChangedListener(object : TextWatcher {
                     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -81,6 +84,7 @@ class EmailConfirmActivity : AppCompatActivity() {
                     override fun afterTextChanged(s: Editable?) {}
                 })
 
+                // Move focus backward on backspace
                 otpBoxes[i].setOnKeyListener { _, keyCode, event ->
                     if (keyCode == KeyEvent.KEYCODE_DEL && event.action == KeyEvent.ACTION_DOWN) {
                         if (otpBoxes[i].text.isEmpty() && i > 0) {
@@ -110,19 +114,37 @@ class EmailConfirmActivity : AppCompatActivity() {
         if (inputCode == generatedOtp) {
             Toast.makeText(this, "Verification Successful!", Toast.LENGTH_SHORT).show()
 
-            val intent = Intent(this, InsertPicture::class.java).apply {
-                // Ensure we are grabbing the "EXTRA_FIRST" from the incoming intent
-                // so it can be passed to the next activity
-                putExtra("EXTRA_FIRST", this@EmailConfirmActivity.intent.getStringExtra("EXTRA_FIRST"))
-                putExtra("EXTRA_LAST", this@EmailConfirmActivity.intent.getStringExtra("EXTRA_LAST"))
-                putExtra("EXTRA_BDAY", this@EmailConfirmActivity.intent.getStringExtra("EXTRA_BDAY"))
-                putExtra("EXTRA_EMAIL", this@EmailConfirmActivity.intent.getStringExtra("EXTRA_EMAIL"))
-                putExtra("EXTRA_SCHOOL", this@EmailConfirmActivity.intent.getStringExtra("EXTRA_SCHOOL"))
-                putExtra("EXTRA_COURSE", this@EmailConfirmActivity.intent.getStringExtra("EXTRA_COURSE"))
-                putExtra("EXTRA_PASSWORD", this@EmailConfirmActivity.intent.getStringExtra("EXTRA_PASSWORD"))
+            val firstName = intent.getStringExtra("EXTRA_FIRST") ?: "User"
+            val email = intent.getStringExtra("EXTRA_EMAIL") ?: ""
+
+            // LOGIC BRANCH: Update vs. Registration
+            if (sessionManager.isLoggedIn()) {
+                // SCENARIO: User is updating profile (Already logged in)
+
+                // 1. Update the local session with the new email/name
+                sessionManager.createLoginSession(email, firstName)
+
+                // 2. Clear task stack and go to Home
+                val intent = Intent(this, Home::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                finish()
+
+            } else {
+                // SCENARIO: New User Registration
+
+                val intent = Intent(this, InsertPicture::class.java).apply {
+                    putExtra("EXTRA_FIRST", firstName)
+                    putExtra("EXTRA_LAST", intent.getStringExtra("EXTRA_LAST"))
+                    putExtra("EXTRA_BDAY", intent.getStringExtra("EXTRA_BDAY"))
+                    putExtra("EXTRA_EMAIL", email)
+                    putExtra("EXTRA_SCHOOL", intent.getStringExtra("EXTRA_SCHOOL"))
+                    putExtra("EXTRA_COURSE", intent.getStringExtra("EXTRA_COURSE"))
+                    putExtra("EXTRA_PASSWORD", intent.getStringExtra("EXTRA_PASSWORD"))
+                }
+                startActivity(intent)
+                finish()
             }
-            startActivity(intent)
-            finish()
         } else {
             Toast.makeText(this, "Invalid verification code", Toast.LENGTH_SHORT).show()
         }

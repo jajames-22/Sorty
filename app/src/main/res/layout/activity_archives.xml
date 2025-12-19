@@ -2,41 +2,23 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.subjects.SubjectsFragment">
+    tools:context=".ui.subjects.ArchivesActivity">
 
-    <LinearLayout
-        android:id="@+id/btnBackToSubjects"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <ImageButton
+        android:id="@+id/btnBackArchives"
+        android:layout_width="20dp"
+        android:layout_height="43dp"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingEnd="8dp"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="@color/transparent"
+        android:scaleType="centerCrop"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/baseline_arrow_back_24"
-            app:tint="@color/primary_green" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:fontFamily="@font/poppins"
-            android:text="Back to My Subjects"
-            android:textColor="@color/primary_green"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-    </LinearLayout>
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/baseline_arrow_back_24"
+        app:tint="@color/primary_green" />
 
     <TextView
         android:id="@+id/homeTitle2"
@@ -50,7 +32,7 @@
         android:textColor="@color/primary_green"
         android:textSize="34sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnBackToSubjects" />
+        app:layout_constraintTop_toBottomOf="@+id/btnBackArchives" />
 
     <TextView
         android:id="@+id/textView"
@@ -96,7 +78,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="@font/poppins"
-        android:text="No archive folders, try adding one!"
+        android:text="No subjects stored as archives"
         android:textColor="@color/dark_grey"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

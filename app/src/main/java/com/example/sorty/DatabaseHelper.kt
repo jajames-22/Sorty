@@ -37,6 +37,8 @@ class DatabaseHelper(context: Context) :
         const val COL_FILE_URI = "uri"
         const val COL_FILE_TYPE = "type"
         const val COL_FILE_SUBJECT = "subject_name"
+        const val TABLE_SUBJECTS = "subjects" // Better to use a constant
+        const val COL_IS_ARCHIVED = "is_archived"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -71,14 +73,15 @@ class DatabaseHelper(context: Context) :
     private fun createSubjectsTable(db: SQLiteDatabase) {
         db.execSQL(
             """
-            CREATE TABLE subjects (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                $COL_USER_EMAIL TEXT, 
-                name TEXT,
-                description TEXT,
-                color TEXT
-            );
-            """
+        CREATE TABLE $TABLE_SUBJECTS (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            $COL_USER_EMAIL TEXT, 
+            name TEXT,
+            description TEXT,
+            color TEXT,
+            $COL_IS_ARCHIVED INTEGER DEFAULT 0
+        );
+        """
         )
     }
 
@@ -248,8 +251,33 @@ class DatabaseHelper(context: Context) :
     fun getAllSubjects(userEmail: String): List<Subject> {
         val subjectList = ArrayList<Subject>()
         val db = readableDatabase
-        // FILTER BY EMAIL
-        val cursor = db.rawQuery("SELECT * FROM subjects WHERE $COL_USER_EMAIL = ? ORDER BY id DESC", arrayOf(userEmail))
+
+        // UPDATED QUERY: Filter by email AND check that is_archived is false (0)
+        val query = "SELECT * FROM subjects WHERE $COL_USER_EMAIL = ? AND is_archived = 0 ORDER BY id DESC"
+
+        val cursor = db.rawQuery(query, arrayOf(userEmail))
+
+        if (cursor.moveToFirst()) {
+            do {
+                val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
+                val name = cursor.getString(cursor.getColumnIndexOrThrow("name"))
+                val desc = cursor.getString(cursor.getColumnIndexOrThrow("description"))
+                val color = cursor.getString(cursor.getColumnIndexOrThrow("color"))
+                subjectList.add(Subject(id, name, desc, color))
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        return subjectList
+    }
+
+    fun getArchivedSubjects(userEmail: String): List<Subject> {
+        val subjectList = ArrayList<Subject>()
+        val db = readableDatabase
+
+        // Query for is_archived = 1
+        val query = "SELECT * FROM subjects WHERE ${COL_USER_EMAIL} = ? AND is_archived = 1 ORDER BY id DESC"
+
+        val cursor = db.rawQuery(query, arrayOf(userEmail))
 
         if (cursor.moveToFirst()) {
             do {
@@ -287,14 +315,29 @@ class DatabaseHelper(context: Context) :
         val db = readableDatabase
         val cursor = db.rawQuery("SELECT * FROM subjects WHERE id = ?", arrayOf(id.toString()))
         var subject: Subject? = null
+
         if (cursor.moveToFirst()) {
             val name = cursor.getString(cursor.getColumnIndexOrThrow("name"))
             val desc = cursor.getString(cursor.getColumnIndexOrThrow("description"))
             val color = cursor.getString(cursor.getColumnIndexOrThrow("color"))
-            subject = Subject(id, name, desc, color)
+
+            // 👇 Read the archive column (0 or 1)
+            val archivedInt = cursor.getInt(cursor.getColumnIndexOrThrow("is_archived"))
+            val isArchived = archivedInt == 1 // Convert to Boolean
+
+            // 👇 Pass it to your Subject model
+            subject = Subject(id, name, desc, color, isArchived)
         }
         cursor.close()
         return subject
+    }
+
+    fun unarchiveSubject(subjectId: Int): Boolean {
+        val db = this.writableDatabase
+        val contentValues = ContentValues()
+        contentValues.put("is_archived", 0) // Set back to false
+        val success = db.update("subjects", contentValues, "id = ?", arrayOf(subjectId.toString()))
+        return success > 0
     }
 
     // ==========================================
@@ -399,6 +442,15 @@ class DatabaseHelper(context: Context) :
         }
         val result = db.insert(TABLE_FILES, null, values)
         return result != -1L
+    }
+
+    fun archiveSubject(subjectId: Int): Boolean {
+        val db = this.writableDatabase
+        val contentValues = ContentValues()
+        contentValues.put("is_archived", 1) // 1 = true
+
+        val success = db.update("subjects", contentValues, "id = ?", arrayOf(subjectId.toString()))
+        return success > 0
     }
 
     fun getFilesForSubject(userEmail: String, subjectName: String): List<SubjectFile> {

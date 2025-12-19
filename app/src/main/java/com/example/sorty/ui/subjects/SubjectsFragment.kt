@@ -37,6 +37,10 @@ class SubjectsFragment : Fragment(), AddNewSubject.AddNewSubjectListener {
         setupRecyclerView()
         loadSubjects()
 
+        bind.btnMenu.setOnClickListener { view ->
+            showPopupMenu(view)
+        }
+
         bind.addSubjectBtn.setOnClickListener {
             val bottomSheet = AddNewSubject()
             bottomSheet.setAddNewSubjectListener(this)
@@ -117,5 +121,30 @@ class SubjectsFragment : Fragment(), AddNewSubject.AddNewSubjectListener {
             Toast.makeText(requireContext(), "Subject Deleted!", Toast.LENGTH_SHORT).show()
             loadSubjects()
         }
+    }
+
+    private fun showPopupMenu(view: View) {
+        // 1. Create the PopupMenu anchored to the button
+        val popup = android.widget.PopupMenu(requireContext(), view)
+
+        // 2. Add "View Archives" to the menu
+        // (GroupId, ItemId, Order, Title)
+        popup.menu.add(0, 1, 0, "View Archives")
+
+        // 3. Set the click listener
+        popup.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                1 -> {
+                    // Navigate to ArchivesActivity
+                    val intent = Intent(requireContext(), ArchivesActivity::class.java)
+                    startActivity(intent)
+                    true
+                }
+                else -> false
+            }
+        }
+
+        // 4. Show the menu
+        popup.show()
     }
 }
