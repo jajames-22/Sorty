@@ -80,29 +80,22 @@ class InsertPicture : AppCompatActivity() {
         }
 
         bind.buttonContinue2.setOnClickListener {
-            val firstName = intent.getStringExtra("EXTRA_FIRST") ?: ""
+            val firstName = intent.getStringExtra("EXTRA_FIRST") ?: "User"
             val lastName = intent.getStringExtra("EXTRA_LAST") ?: ""
             val bday = intent.getStringExtra("EXTRA_BDAY") ?: ""
             val email = intent.getStringExtra("EXTRA_EMAIL") ?: ""
-            // 👇 GET PASSWORD FROM INTENT
             val password = intent.getStringExtra("EXTRA_PASSWORD") ?: ""
             val school = intent.getStringExtra("EXTRA_SCHOOL") ?: ""
             val course = intent.getStringExtra("EXTRA_COURSE") ?: ""
-
             val imageUriString = selectedImageUri?.toString() ?: ""
 
             val db = DatabaseHelper(this)
 
-            // 👇 UPDATED: Passed 'password' as the 5th argument
             val success = db.insertUser(firstName, lastName, bday, email, password, school, course, imageUriString)
 
             if (success) {
-                // ❌ REMOVE THIS LINE:
-                // sessionManager.setLogin(true)
-
-                // ✅ REPLACE WITH THIS:
-                // This saves the email so the app knows WHICH user is logged in
-                sessionManager.createLoginSession(email)
+                // ✅ UPDATED: Use the new method that accepts both email and firstName
+                sessionManager.createLoginSession(email, firstName)
 
                 Toast.makeText(this, "Account Created Successfully!", Toast.LENGTH_SHORT).show()
 

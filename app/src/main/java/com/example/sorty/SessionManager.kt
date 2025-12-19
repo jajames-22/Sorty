@@ -6,21 +6,35 @@ import android.content.SharedPreferences
 class SessionManager(context: Context) {
 
     companion object {
-        const val PREF_NAME = "SortyUserSession"
-        const val KEY_IS_LOGGED_IN = "isLoggedIn"
-        const val KEY_EMAIL = "email" // 1. Add this key
+        private const val PREF_NAME = "SortyUserSession"
+        private const val KEY_IS_LOGGED_IN = "isLoggedIn"
+        private const val KEY_EMAIL = "email"
+        private const val KEY_FIRST_NAME = "firstName" // Added for greeting
+        private const val KEY_IS_FIRST_TIME = "isFirstTime"
     }
 
     private val prefs: SharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     private val editor: SharedPreferences.Editor = prefs.edit()
 
-    fun setLogin(isLoggedIn: Boolean) {
-        editor.putBoolean(KEY_IS_LOGGED_IN, isLoggedIn)
+    /**
+     * Creates a full login session with email and name
+     */
+    fun createLoginSession(email: String, firstName: String) {
+        editor.putBoolean(KEY_IS_LOGGED_IN, true)
+        editor.putString(KEY_EMAIL, email)
+        editor.putString(KEY_FIRST_NAME, firstName)
         editor.apply()
     }
 
-    fun isLoggedIn(): Boolean {
-        return prefs.getBoolean(KEY_IS_LOGGED_IN, false)
+    fun isLoggedIn(): Boolean = prefs.getBoolean(KEY_IS_LOGGED_IN, false)
+
+    fun getEmail(): String? = prefs.getString(KEY_EMAIL, null)
+
+    /**
+     * Retrieves the stored first name for the "Hello, (Name)" greeting
+     */
+    fun getFirstName(): String {
+        return prefs.getString(KEY_FIRST_NAME, "User") ?: "User"
     }
 
     fun logout() {
@@ -28,25 +42,12 @@ class SessionManager(context: Context) {
         editor.apply()
     }
 
-    // 2. ADD THIS FUNCTION TO FIX THE ERROR
-    fun createLoginSession(email: String) {
-        editor.putBoolean(KEY_IS_LOGGED_IN, true)
-        editor.putString(KEY_EMAIL, email) // Save the email
-        editor.apply()
-    }
-
-    // Optional: You can use this later to get the current user's email
-    fun getEmail(): String? {
-        return prefs.getString(KEY_EMAIL, null)
-    }
-
-    // Add this inside SessionManager class
+    // --- First Launch Logic ---
     fun setFirstTimeLaunch(isFirstTime: Boolean) {
-        editor.putBoolean("IS_FIRST_TIME", isFirstTime)
+        editor.putBoolean(KEY_IS_FIRST_TIME, isFirstTime)
         editor.apply()
     }
 
-    fun isFirstTimeLaunch(): Boolean {
-        return prefs.getBoolean("IS_FIRST_TIME", true)
-    }
+
+    fun isFirstTimeLaunch(): Boolean = prefs.getBoolean(KEY_IS_FIRST_TIME, true)
 }

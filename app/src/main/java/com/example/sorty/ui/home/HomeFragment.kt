@@ -12,7 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.sorty.DatabaseHelper
 import com.example.sorty.R
-import com.example.sorty.SessionManager // Ensure this import exists
+import com.example.sorty.SessionManager
 import com.example.sorty.data.models.Task
 import com.example.sorty.databinding.FragmentHomeBinding
 import java.util.Locale
@@ -22,7 +22,7 @@ class HomeFragment : Fragment() {
     private lateinit var bind: FragmentHomeBinding
     private lateinit var todoAdapter: TodoAdapter
     private lateinit var dbHelper: DatabaseHelper
-    private lateinit var sessionManager: SessionManager // 1. Add SessionManager
+    private lateinit var sessionManager: SessionManager
 
     // Track the currently active filter (Default to ONGOING)
     private var currentFilter: TaskFilter = TaskFilter.ONGOING
@@ -38,8 +38,14 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Initialize Helpers
         dbHelper = DatabaseHelper(requireContext())
-        sessionManager = SessionManager(requireContext()) // 2. Initialize SessionManager
+        sessionManager = SessionManager(requireContext())
+
+        // 1. SET THE USER GREETING
+        // This pulls the name you saved in InsertPicture via SessionManager
+        val firstName = sessionManager.getFirstName()
+        bind.homeTitle.text = "Hello, $firstName"
 
         setupRecyclerView()
         setupListeners()
@@ -47,13 +53,6 @@ class HomeFragment : Fragment() {
     }
 
     // --- Setup RecyclerView and Adapter ---
-    private fun showTaskDetails(taskId: Long) {
-        if (isAdded && !childFragmentManager.isStateSaved) {
-            val detailFragment = TaskDetailFragment.newInstance(taskId)
-            detailFragment.show(childFragmentManager, "TaskDetailSheet")
-        }
-    }
-
     private fun setupRecyclerView() {
         todoAdapter = TodoAdapter(
             tasks = emptyList(),
@@ -64,6 +63,13 @@ class HomeFragment : Fragment() {
         bind.recyclerViewTodo.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = todoAdapter
+        }
+    }
+
+    private fun showTaskDetails(taskId: Long) {
+        if (isAdded && !childFragmentManager.isStateSaved) {
+            val detailFragment = TaskDetailFragment.newInstance(taskId)
+            detailFragment.show(childFragmentManager, "TaskDetailSheet")
         }
     }
 
@@ -81,24 +87,17 @@ class HomeFragment : Fragment() {
 
     // --- Core Filtering Logic ---
     fun loadTasksFromDatabase() {
-        // 3. Get the current user's email
         val currentUserEmail = sessionManager.getEmail() ?: ""
 
         if (currentUserEmail.isEmpty()) {
-            // Safety check: If no email found, just clear the list or handle logout
             todoAdapter.updateTasks(emptyList())
             return
         }
 
-        // 4. Pass the EMAIL to the database helper functions
+        // Fetch tasks based on the active filter
         val tasks = when (currentFilter) {
-            // FIX: Pass (email, time) instead of just (time)
             TaskFilter.ONGOING -> dbHelper.getOngoingTasks(currentUserEmail, System.currentTimeMillis())
-
-            // FIX: Pass (email)
             TaskFilter.COMPLETED -> dbHelper.getCompletedTasks(currentUserEmail)
-
-            // FIX: Pass (email, time)
             TaskFilter.MISSED -> dbHelper.getMissedTasks(currentUserEmail, System.currentTimeMillis())
         }
 
@@ -116,7 +115,10 @@ class HomeFragment : Fragment() {
         todoAdapter.updateTasks(tasks)
 
         applyFilterButtonColor()
-        bind.filterDropdown.text = currentFilter.name.lowercase().replaceFirstChar { it.titlecase(Locale.getDefault()) }
+
+        // Update the dropdown text to match the current filter
+        bind.filterDropdown.text = currentFilter.name.lowercase()
+            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
     }
 
     private fun applyFilterButtonColor() {
@@ -136,6 +138,7 @@ class HomeFragment : Fragment() {
     private fun setupListeners() {
         bind.addNotesBtn.setOnClickListener {
             if (isAdded && !childFragmentManager.isStateSaved) {
+                // Assuming addNotes() is a function that returns a BottomSheetDialogFragment
                 val bottomSheet = addNotes()
                 bottomSheet.show(childFragmentManager, "AddNotesSheet")
             }
@@ -165,7 +168,7 @@ class HomeFragment : Fragment() {
 
             if (selectedFilter != currentFilter) {
                 currentFilter = selectedFilter
-                loadTasksFromDatabase() // Reload tasks with the new filter
+                loadTasksFromDatabase()
             }
             true
         }

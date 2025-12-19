@@ -96,7 +96,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         bind.createAcc.setOnClickListener {
-            startActivity(Intent(this, CreateAccount::class.java))
+            startActivity(Intent(this, LoginActivity::class.java))
         }
     }
 

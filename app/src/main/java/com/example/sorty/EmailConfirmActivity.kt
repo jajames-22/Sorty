@@ -111,6 +111,8 @@ class EmailConfirmActivity : AppCompatActivity() {
             Toast.makeText(this, "Verification Successful!", Toast.LENGTH_SHORT).show()
 
             val intent = Intent(this, InsertPicture::class.java).apply {
+                // Ensure we are grabbing the "EXTRA_FIRST" from the incoming intent
+                // so it can be passed to the next activity
                 putExtra("EXTRA_FIRST", this@EmailConfirmActivity.intent.getStringExtra("EXTRA_FIRST"))
                 putExtra("EXTRA_LAST", this@EmailConfirmActivity.intent.getStringExtra("EXTRA_LAST"))
                 putExtra("EXTRA_BDAY", this@EmailConfirmActivity.intent.getStringExtra("EXTRA_BDAY"))

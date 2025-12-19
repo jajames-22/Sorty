@@ -57,6 +57,7 @@ class DatabaseHelper(context: Context) :
             """
         )
 
+
         // 2. Subjects Table
         createSubjectsTable(db)
 
@@ -183,6 +184,20 @@ class DatabaseHelper(context: Context) :
         }
         cursor.close()
         return user
+    }
+
+    // Inside your DatabaseHelper class
+    fun getUserFirstName(email: String): String {
+        val db = this.readableDatabase
+        // Adjust "first_name" if your column name is different
+        val cursor = db.rawQuery("SELECT first_name FROM users WHERE email = ?", arrayOf(email))
+        var name = "User"
+
+        if (cursor != null && cursor.moveToFirst()) {
+            name = cursor.getString(0)
+        }
+        cursor?.close()
+        return name
     }
 
     fun getUserByEmail(email: String): User? {
