@@ -37,6 +37,7 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        onResume()
 
         // Initialize Helpers
         dbHelper = DatabaseHelper(requireContext())
@@ -45,7 +46,7 @@ class HomeFragment : Fragment() {
         // 1. SET THE USER GREETING
         // This pulls the name you saved in InsertPicture via SessionManager
         val firstName = sessionManager.getFirstName()
-        bind.homeTitle.text = "Hello, $firstName"
+        bind.homeTitle.text = "Hello, $firstName!"
 
         setupRecyclerView()
         setupListeners()

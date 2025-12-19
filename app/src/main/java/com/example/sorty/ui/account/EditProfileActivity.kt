@@ -21,6 +21,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.sorty.DatabaseHelper
 import com.example.sorty.GMailSender
 import com.example.sorty.R
+import com.example.sorty.SessionManager // Added Import
 import com.example.sorty.databinding.ActivityEditProfileBinding
 import com.example.sorty.ui.auth.EmailConfirmActivity
 import com.yalantis.ucrop.UCrop
@@ -34,6 +35,7 @@ class EditProfileActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityEditProfileBinding
     private lateinit var db: DatabaseHelper
+    private lateinit var sessionManager: SessionManager // 1. Define SessionManager
     private var currentUserId: Int = -1
     private var selectedImageUri: String = ""
     private var originalUser: com.example.sorty.data.models.User? = null
@@ -69,6 +71,7 @@ class EditProfileActivity : AppCompatActivity() {
         }
 
         db = DatabaseHelper(this)
+        sessionManager = SessionManager(this) // 2. Initialize SessionManager
         loadUserData()
         setupListeners()
     }
@@ -107,7 +110,6 @@ class EditProfileActivity : AppCompatActivity() {
 
         val fName = binding.etFirstName.text.toString().trim()
 
-        // Only First Name is mandatory
         if (fName.isEmpty()) {
             Toast.makeText(this, "First Name is required", Toast.LENGTH_SHORT).show()
             return
@@ -158,6 +160,8 @@ class EditProfileActivity : AppCompatActivity() {
             if (emailChanged) {
                 sendNewVerification(fName, lName, bday, newEmail, school, course)
             } else {
+                // 3. Update SessionManager so HomeFragment sees the name change
+                sessionManager.createLoginSession(newEmail, fName)
                 showSuccessModal(fName, lName, bday, newEmail, school, course)
             }
         } else {
@@ -197,6 +201,8 @@ class EditProfileActivity : AppCompatActivity() {
                 putExtra("EXTRA_EMAIL", email)
                 putExtra("EXTRA_SCHOOL", school)
                 putExtra("EXTRA_COURSE", course)
+                // 4. Important: Pass current password so session can be fully restored in EmailConfirmActivity
+                putExtra("EXTRA_PASSWORD", originalUser?.password)
             }
             startActivity(intent)
             finish()

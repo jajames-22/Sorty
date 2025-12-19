@@ -5,6 +5,8 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
+    android:backgroundTint="@color/white"
     tools:context=".ui.subjects.ArchivesActivity">
 
     <ImageButton
@@ -68,10 +70,10 @@
         android:layout_height="113dp"
         android:layout_marginTop="180dp"
         android:src="@drawable/twotone_folder_24"
-        app:tint="@color/grey"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        app:layout_constraintTop_toBottomOf="@+id/textView"
+        app:tint="@color/grey" />
 
     <TextView
         android:id="@+id/emptyFolderText"

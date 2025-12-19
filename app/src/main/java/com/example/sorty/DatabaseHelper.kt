@@ -168,25 +168,27 @@ class DatabaseHelper(context: Context) :
         return result != -1L
     }
 
+    // Inside DatabaseHelper.kt
     fun getUser(): User? {
-        // NOTE: This gets the FIRST user in DB.
-        // Better practice is to use getUserByEmail if you have multiple users.
         val db = readableDatabase
         val cursor = db.rawQuery("SELECT * FROM users LIMIT 1", null)
-        var user: User? = null
         if (cursor.moveToFirst()) {
-            val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
-            val firstName = cursor.getString(cursor.getColumnIndexOrThrow("first_name"))
-            val lastName = cursor.getString(cursor.getColumnIndexOrThrow("last_name"))
-            val birthday = cursor.getString(cursor.getColumnIndexOrThrow("birthday"))
-            val email = cursor.getString(cursor.getColumnIndexOrThrow("email"))
-            val school = cursor.getString(cursor.getColumnIndexOrThrow("school"))
-            val course = cursor.getString(cursor.getColumnIndexOrThrow("course"))
-            val imageUri = cursor.getString(cursor.getColumnIndexOrThrow("image_uri"))
-            user = User(id, firstName, lastName, birthday, email, school, course, imageUri)
+            val user = User(
+                id = cursor.getInt(cursor.getColumnIndexOrThrow("id")),
+                firstName = cursor.getString(cursor.getColumnIndexOrThrow("first_name")),
+                lastName = cursor.getString(cursor.getColumnIndexOrThrow("last_name")),
+                birthday = cursor.getString(cursor.getColumnIndexOrThrow("birthday")),
+                email = cursor.getString(cursor.getColumnIndexOrThrow("email")),
+                password = cursor.getString(cursor.getColumnIndexOrThrow("password")), // 👈 Pull from DB
+                school = cursor.getString(cursor.getColumnIndexOrThrow("school")),
+                course = cursor.getString(cursor.getColumnIndexOrThrow("course")),
+                imageUri = cursor.getString(cursor.getColumnIndexOrThrow("image_uri"))
+            )
+            cursor.close()
+            return user
         }
         cursor.close()
-        return user
+        return null
     }
 
     fun updateUserImage(email: String, imageUri: String): Boolean {
@@ -216,16 +218,21 @@ class DatabaseHelper(context: Context) :
         val db = readableDatabase
         val cursor = db.rawQuery("SELECT * FROM users WHERE email = ?", arrayOf(email))
         var user: User? = null
+
         if (cursor.moveToFirst()) {
             val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
             val firstName = cursor.getString(cursor.getColumnIndexOrThrow("first_name"))
             val lastName = cursor.getString(cursor.getColumnIndexOrThrow("last_name"))
             val birthday = cursor.getString(cursor.getColumnIndexOrThrow("birthday"))
             val emailVal = cursor.getString(cursor.getColumnIndexOrThrow("email"))
+            // 👇 1. Pull the password from the database
+            val password = cursor.getString(cursor.getColumnIndexOrThrow("password"))
             val school = cursor.getString(cursor.getColumnIndexOrThrow("school"))
             val course = cursor.getString(cursor.getColumnIndexOrThrow("course"))
             val imageUri = cursor.getString(cursor.getColumnIndexOrThrow("image_uri"))
-            user = User(id, firstName, lastName, birthday, emailVal, school, course, imageUri)
+
+            // 👇 2. Pass all 9 arguments to the User constructor
+            user = User(id, firstName, lastName, birthday, emailVal, password, school, course, imageUri)
         }
         cursor.close()
         return user

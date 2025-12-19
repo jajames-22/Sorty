@@ -65,7 +65,6 @@ class EmailConfirmActivity : AppCompatActivity() {
 
     private fun verifyCode(inputCode: String) {
         if (inputCode == generatedOtp) {
-            // Retrieve all registration data passed from the previous activity
             val firstName = intent.getStringExtra("EXTRA_FIRST") ?: ""
             val lastName = intent.getStringExtra("EXTRA_LAST") ?: ""
             val bday = intent.getStringExtra("EXTRA_BDAY") ?: ""
@@ -75,21 +74,22 @@ class EmailConfirmActivity : AppCompatActivity() {
             val password = intent.getStringExtra("EXTRA_PASSWORD") ?: ""
 
             if (sessionManager.isLoggedIn()) {
-                // Profile Update Flow
+                // SCENARIO: Profile Update (Name/Email changed)
+                // Update session so greeting reflects changes immediately
                 sessionManager.createLoginSession(email, firstName)
+                Toast.makeText(this, "Profile verified and updated!", Toast.LENGTH_SHORT).show()
+
                 val intent = Intent(this, Home::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
                 finish()
             } else {
-                // New Registration Flow - Attempt to save to database immediately
-                val isRegistered = dbHelper.insertUser(
-                    firstName, lastName, bday, email, password, school, course, ""
-                )
+                // SCENARIO: New Registration
+                val isRegistered = dbHelper.insertUser(firstName, lastName, bday, email, password, school, course, "")
 
                 if (isRegistered) {
-                    Toast.makeText(this, "Account created successfully!", Toast.LENGTH_SHORT).show()
                     sessionManager.createLoginSession(email, firstName)
+                    Toast.makeText(this, "Account created and verified!", Toast.LENGTH_SHORT).show()
 
                     val intent = Intent(this, InsertPicture::class.java).apply {
                         putExtra("EXTRA_EMAIL", email)
@@ -97,8 +97,7 @@ class EmailConfirmActivity : AppCompatActivity() {
                     startActivity(intent)
                     finish()
                 } else {
-                    // Check if email already exists or if there's a database constraint error
-                    Toast.makeText(this, "Registration failed. This email may already be in use.", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Registration failed. Try a different email.", Toast.LENGTH_SHORT).show()
                 }
             }
         } else {
@@ -110,6 +109,7 @@ class EmailConfirmActivity : AppCompatActivity() {
         try {
             val otpContainer = binding.otpContainer
             otpBoxes = Array(6) { i -> otpContainer.getChildAt(i) as EditText }
+
             for (i in 0 until 6) {
                 otpBoxes[i].addTextChangedListener(object : TextWatcher {
                     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -118,6 +118,7 @@ class EmailConfirmActivity : AppCompatActivity() {
                     }
                     override fun afterTextChanged(s: Editable?) {}
                 })
+
                 otpBoxes[i].setOnKeyListener { _, keyCode, event ->
                     if (keyCode == KeyEvent.KEYCODE_DEL && event.action == KeyEvent.ACTION_DOWN) {
                         if (otpBoxes[i].text.isEmpty() && i > 0) {
