@@ -7,7 +7,6 @@
     android:layout_height="match_parent"
     android:background="@color/primary_green">
 
-    <!-- HEADER & TABS SECTION (Keep Unchanged) -->
     <ImageView
         android:id="@+id/bgsubject"
         android:layout_width="0dp"
@@ -46,19 +45,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/bgsubject" />
 
-    <TextView
+    <ImageView
         android:id="@+id/btn_edit_course"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
-        android:background="@drawable/bg_edit_button"
-        android:fontFamily="@font/poppins"
-        android:paddingHorizontal="12dp"
-        android:paddingVertical="6dp"
-        android:text="Edit Course"
-        android:textColor="@color/black_text"
-        android:textSize="12sp"
-        android:textStyle="bold"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="8dp"
+        android:src="@drawable/baseline_more_vert_24"
+        app:tint="@color/black_text"
         app:layout_constraintBottom_toBottomOf="@+id/tv_subject_name"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/tv_subject_name" />
@@ -120,7 +117,6 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- TO-DO CONTENT AREA -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layout_content_todo"
         android:layout_width="match_parent"
@@ -213,7 +209,6 @@
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- 👇 UPDATED FILES CONTENT AREA 👇 -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/layout_content_files"
         android:layout_width="match_parent"
@@ -244,7 +239,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- 👇 ADDED RECYCLER VIEW FOR FILES 👇 -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_files_list"
             android:layout_width="0dp"
@@ -258,7 +252,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/btn_add_file" />
 
-        <!-- EMPTY STATE FOR FILES -->
         <LinearLayout
             android:id="@+id/layout_files_empty_state"
             android:layout_width="wrap_content"

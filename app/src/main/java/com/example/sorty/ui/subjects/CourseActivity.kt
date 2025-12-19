@@ -12,6 +12,7 @@ import android.provider.OpenableColumns
 import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.ImageView // 👈 CHANGED from TextView
 import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.TextView
@@ -28,7 +29,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.sorty.DatabaseHelper
 import com.example.sorty.R
-import com.example.sorty.SessionManager // 👈 IMPORT THIS
+import com.example.sorty.SessionManager
 import com.example.sorty.data.models.SubjectFile
 import com.example.sorty.ui.home.TaskDetailFragment
 import com.example.sorty.ui.home.TaskFilter
@@ -43,7 +44,10 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
     private lateinit var btnBack: ImageButton
     private lateinit var tvSubjectName: TextView
     private lateinit var tvSubjectDescription: TextView
-    private lateinit var btnEditCourse: TextView
+
+    // 👇 UPDATED: Changed to ImageView to match your new XML
+    private lateinit var btnEditCourse: ImageView
+
     private lateinit var bgSubject: View
     private lateinit var tabTodo: TextView
     private lateinit var tabFiles: TextView
@@ -67,14 +71,14 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
     private lateinit var fileAdapter: FileAdapter
 
     private lateinit var dbHelper: DatabaseHelper
-    private lateinit var sessionManager: SessionManager // 👈 ADD THIS
+    private lateinit var sessionManager: SessionManager
 
     private var currentCourseId: Int = -1
     private var currentCourseName: String = ""
     private var currentCourseDesc: String = ""
     private var currentCourseColor: String = "#FFFFFF"
     private var currentFilter: TaskFilter = TaskFilter.ONGOING
-    private var currentUserEmail: String = "" // 👈 ADD THIS
+    private var currentUserEmail: String = ""
 
     // File Picker
     private val pickFileLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
@@ -85,7 +89,6 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
             val fileName = getFileNameFromUri(uri)
             val fileType = contentResolver.getType(uri) ?: "application/octet-stream"
 
-            // 👇 FIX 1: Pass currentUserEmail
             val success = dbHelper.insertFile(currentUserEmail, fileName, uri.toString(), fileType, currentCourseName)
 
             if (success) {
@@ -109,8 +112,8 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
 
         // Initialize Helpers
         dbHelper = DatabaseHelper(this)
-        sessionManager = SessionManager(this) // 👈 Initialize Session
-        currentUserEmail = sessionManager.getEmail() ?: "" // 👈 Get Email
+        sessionManager = SessionManager(this)
+        currentUserEmail = sessionManager.getEmail() ?: ""
 
         window.navigationBarColor = Color.WHITE
         val windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
@@ -145,7 +148,10 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
         btnBack = findViewById(R.id.btn_back)
         tvSubjectName = findViewById(R.id.tv_subject_name)
         tvSubjectDescription = findViewById(R.id.tv_subject_description)
+
+        // 👇 UPDATED cast
         btnEditCourse = findViewById(R.id.btn_edit_course)
+
         bgSubject = findViewById(R.id.bg_subject)
         tabTodo = findViewById(R.id.tab_todo)
         tabFiles = findViewById(R.id.tab_files)
@@ -217,8 +223,6 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
         if (currentUserEmail.isEmpty()) return
 
         val currentTime = System.currentTimeMillis()
-
-        // 👇 FIX 2: Pass currentUserEmail to all these functions
         val statusTasks = when (currentFilter) {
             TaskFilter.ONGOING -> dbHelper.getOngoingTasks(currentUserEmail, currentTime)
             TaskFilter.COMPLETED -> dbHelper.getCompletedTasks(currentUserEmail)
@@ -242,10 +246,7 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
 
     private fun loadCourseFiles() {
         if (currentUserEmail.isEmpty()) return
-
-        // 👇 FIX 3: Pass currentUserEmail
         val files = dbHelper.getFilesForSubject(currentUserEmail, currentCourseName)
-
         if (files.isEmpty()) {
             rvFilesList.visibility = View.GONE
             layoutFilesEmptyState.visibility = View.VISIBLE
@@ -259,10 +260,9 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
     private fun setupListeners() {
         btnBack.setOnClickListener { finish() }
 
-        btnEditCourse.setOnClickListener {
-            val bottomSheet = AddNewSubject.newInstance(currentCourseId, currentCourseName, currentCourseDesc, currentCourseColor)
-            bottomSheet.setAddNewSubjectListener(this)
-            bottomSheet.show(supportFragmentManager, "EditSubject")
+        // 👇 UPDATED: Replaced direct listener with PopupMenu logic
+        btnEditCourse.setOnClickListener { view ->
+            showOptionsMenu(view)
         }
 
         btnAddTodo.setOnClickListener {
@@ -278,6 +278,79 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener 
         }
 
         tvFilterOngoing.setOnClickListener { showFilterMenu(it) }
+    }
+
+    // 👇 NEW FUNCTION: Shows the 3-dot menu
+    private fun showOptionsMenu(view: View) {
+        val popup = PopupMenu(this, view)
+
+        popup.menuInflater.inflate(R.menu.subject_options_menu, popup.menu)
+
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_edit_subject -> {
+                    // Open the existing Edit BottomSheet
+                    val bottomSheet = AddNewSubject.newInstance(currentCourseId, currentCourseName, currentCourseDesc, currentCourseColor)
+                    bottomSheet.setAddNewSubjectListener(this)
+                    bottomSheet.show(supportFragmentManager, "EditSubject")
+                    true
+                }
+                R.id.action_archive_subject -> {
+                    archiveSubjectConfirmation()
+                    true
+                }
+                R.id.action_share_subject -> {
+                    shareSubject()
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
+    }
+
+    // 👇 NEW FUNCTION: Share Logic
+    private fun shareSubject() {
+        val shareText = "Check out my subject on Sorty!\n\nSubject: $currentCourseName\nDescription: $currentCourseDesc"
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, shareText)
+            type = "text/plain"
+        }
+        startActivity(Intent.createChooser(shareIntent, "Share Subject via"))
+    }
+
+    // 👇 NEW FUNCTION: Archive Logic (Requires Database update later)
+    private fun archiveSubjectConfirmation() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_confirm_save, null)
+        val builder = android.app.AlertDialog.Builder(this)
+        builder.setView(dialogView)
+        val dialog = builder.create()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        val tvTitle = dialogView.findViewById<TextView>(R.id.tv_title)
+        val tvMessage = dialogView.findViewById<TextView>(R.id.tv_message)
+        val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
+        val btnConfirm = dialogView.findViewById<Button>(R.id.btn_confirm)
+
+        tvTitle.text = "Archive Subject"
+        tvMessage.text = "Are you sure you want to move '$currentCourseName' to the archive?"
+        btnConfirm.text = "Archive"
+
+        btnCancel.setOnClickListener { dialog.dismiss() }
+
+        btnConfirm.setOnClickListener {
+            // TODO: Implement dbHelper.archiveSubject(currentCourseId)
+            // For now, we simulate success or delete it depending on your preference
+            // Example:
+            // val success = dbHelper.archiveSubject(currentCourseId)
+
+            Toast.makeText(this, "Subject Archived (Functionality Pending DB)", Toast.LENGTH_SHORT).show()
+            dialog.dismiss()
+            finish() // Close the screen after archiving
+        }
+
+        dialog.show()
     }
 
     private fun showFilterMenu(view: View) {
