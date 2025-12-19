@@ -10,8 +10,8 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import android.widget.Toast
+import androidx.fragment.app.setFragmentResult
 import com.example.sorty.DatabaseHelper
-import com.example.sorty.FirestoreHelper // 👈 Ensure you have created this class
 import com.example.sorty.R
 import com.example.sorty.SessionManager
 import com.example.sorty.data.models.Task
@@ -32,7 +32,6 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
     private val bind get() = _bind!!
 
     private lateinit var dbHelper: DatabaseHelper
-    private lateinit var firestoreHelper: FirestoreHelper
     private lateinit var sessionManager: SessionManager
 
     private var selectedReminderTimestamp: Long? = null
@@ -43,10 +42,13 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
 
     companion object {
         private const val ARG_TASK_ID = "arg_task_id"
-        fun newInstance(taskId: Long): addNotes {
+        private const val ARG_PRESET_SUBJECT = "arg_preset_subject"
+
+        fun newInstance(taskId: Long, presetSubject: String? = null): addNotes {
             val fragment = addNotes()
             val args = Bundle().apply {
                 putLong(ARG_TASK_ID, taskId)
+                putString(ARG_PRESET_SUBJECT, presetSubject)
             }
             fragment.arguments = args
             return fragment
@@ -55,13 +57,14 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        isCancelable = false
+        isCancelable = true // Changed to true to allow dismissal on back press
         taskIdToEdit = arguments?.getLong(ARG_TASK_ID) ?: 0L
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState) as BottomSheetDialog
         dialog.setOnShowListener {
+            // Finding the internal BottomSheet ID using the Material library resource
             val bottomSheet = dialog.findViewById<View>(com.google.android.material.R.id.design_bottom_sheet)
             bottomSheet?.let {
                 val behavior = BottomSheetBehavior.from(it)
@@ -84,7 +87,6 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
         super.onViewCreated(view, savedInstanceState)
 
         dbHelper = DatabaseHelper(requireContext())
-        firestoreHelper = FirestoreHelper()
         sessionManager = SessionManager(requireContext())
         currentUserEmail = sessionManager.getEmail() ?: ""
 
@@ -94,7 +96,7 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
             loadExistingTask(taskIdToEdit)
         } else {
             updateEmojiPreview(selectedEmoji)
-            val presetSubject = arguments?.getString("arg_preset_subject")
+            val presetSubject = arguments?.getString(ARG_PRESET_SUBJECT)
             if (!presetSubject.isNullOrEmpty()) {
                 bind.autoCompleteSubject.setText(presetSubject, false)
             }
@@ -111,9 +113,11 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
 
         val adapter = ArrayAdapter(requireContext(), R.layout.dropdown_item, subjectNames)
         bind.autoCompleteSubject.setAdapter(adapter)
-        bind.autoCompleteSubject.setDropDownBackgroundResource(R.color.white)
 
-        if (taskIdToEdit == 0L) {
+        // Use standard Android white if R.color.white is causing issues
+        bind.autoCompleteSubject.setDropDownBackgroundResource(android.R.color.white)
+
+        if (taskIdToEdit == 0L && bind.autoCompleteSubject.text.isEmpty()) {
             bind.autoCompleteSubject.setText("None", false)
         }
     }
@@ -142,11 +146,6 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
     }
 
     private fun saveNoteAndDismiss() {
-        if (currentUserEmail.isEmpty()) {
-            Toast.makeText(requireContext(), "User not identified!", Toast.LENGTH_SHORT).show()
-            return
-        }
-
         val title = bind.inputNoteTitle.text.toString().trim()
         val content = bind.inputNoteContent.text.toString().trim()
         var subject = bind.autoCompleteSubject.text.toString()
@@ -157,10 +156,8 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
             return
         }
 
-        // 1. Create Task Object (If new task, generate a temp ID using timestamp)
-        val finalId = if (taskIdToEdit == 0L) System.currentTimeMillis() else taskIdToEdit
         val task = Task(
-            id = finalId,
+            id = taskIdToEdit,
             title = title,
             content = content,
             dueDate = selectedReminderTimestamp ?: 0L,
@@ -169,30 +166,24 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
             emojiIcon = selectedEmoji
         )
 
-        // 2. Save Locally (SQLite)
-        val localSuccess = if (taskIdToEdit != 0L) {
+        val success = if (taskIdToEdit != 0L) {
             dbHelper.updateFullTask(task)
         } else {
             dbHelper.insertTask(currentUserEmail, task)
         }
 
-        // 3. Sync to Cloud (Firestore)
-        firestoreHelper.uploadTask(currentUserEmail, task) { cloudSuccess ->
-            if (!cloudSuccess) {
-                // Background sync failed, but data is safe in SQLite
-            }
-        }
-
-        if (localSuccess) {
+        if (success) {
             Toast.makeText(requireContext(), "Note Saved", Toast.LENGTH_SHORT).show()
-            refreshUI()
-            dismiss()
-        }
-    }
 
-    private fun refreshUI() {
-        (parentFragment as? HomeFragment)?.loadTasksFromDatabase()
-        (activity as? CourseActivity)?.loadCourseTasks()
+            // 👇 KEY FIX: Send signal to HomeFragment to refresh immediately
+            val result = Bundle().apply { putBoolean("refresh", true) }
+            parentFragmentManager.setFragmentResult("task_updated", result)
+
+            dismiss()
+        } else {
+            Toast.makeText(requireContext(), "Failed to save locally", Toast.LENGTH_SHORT).show()
+        }
+
     }
 
     private fun setupListeners() {
@@ -249,7 +240,7 @@ class addNotes : BottomSheetDialogFragment(), EmojiSelectedListener {
     private fun showEmojiPicker() {
         val picker = EmojiPickerFragment()
         picker.listener = this
-        picker.show(parentFragmentManager, "EmojiPicker")
+        picker.show(childFragmentManager, "EmojiPicker")
     }
 
     private fun updateEmojiPreview(emoji: String) {

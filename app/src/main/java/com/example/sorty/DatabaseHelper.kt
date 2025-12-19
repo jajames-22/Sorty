@@ -496,4 +496,44 @@ class DatabaseHelper(context: Context) :
         val result = db.update("users", values, "id=?", arrayOf(id.toString()))
         return result > 0
     }
+
+    // Check if a user exists by email (used for sharing)
+    fun checkUserExists(email: String): Boolean {
+        val db = this.readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM users WHERE email = ?", arrayOf(email))
+        val exists = cursor.count > 0
+        cursor.close()
+        return exists
+    }
+
+    // Clone a subject and its tasks to another user
+    fun cloneSubjectToUser(subjectId: Int, targetUserEmail: String): Boolean {
+        val db = this.writableDatabase
+        return try {
+            // 1. Get the original subject details
+            val cursor = db.rawQuery("SELECT * FROM subjects WHERE id = ?", arrayOf(subjectId.toString()))
+            if (cursor.moveToFirst()) {
+                val name = cursor.getString(cursor.getColumnIndexOrThrow("name"))
+                val description = cursor.getString(cursor.getColumnIndexOrThrow("description"))
+                val color = cursor.getString(cursor.getColumnIndexOrThrow("color"))
+                cursor.close()
+
+                // 2. Insert as a new subject for the target user
+                val values = ContentValues().apply {
+                    put("email", targetUserEmail)
+                    put("name", name)
+                    put("description", description)
+                    put("color", color)
+                }
+                db.insert("subjects", null, values)
+                true
+            } else {
+                cursor.close()
+                false
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
 }
