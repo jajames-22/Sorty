@@ -145,6 +145,8 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
         layoutEmptyState = findViewById(R.id.layout_empty_state)
         rvFilesList = findViewById(R.id.rv_files_list)
         layoutFilesEmptyState = findViewById(R.id.layout_files_empty_state)
+        tvFilterOngoing.setBackgroundColor(Color.WHITE)
+
     }
 
     private fun loadCourseData() {
@@ -352,10 +354,37 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
 
     private fun showFilterMenu(view: View) {
         val popup = PopupMenu(this, view)
-        popup.menu.add(0, 1, 0, "Ongoing"); popup.menu.add(0, 2, 1, "Completed"); popup.menu.add(0, 3, 2, "Missed")
-        popup.setOnMenuItemClickListener {
-            currentFilter = when(it.itemId) { 1 -> TaskFilter.ONGOING; 2 -> TaskFilter.COMPLETED; else -> TaskFilter.MISSED }
-            loadCourseTasks(); true
+        // Add menu items
+        popup.menu.add(0, 1, 0, "Ongoing")
+        popup.menu.add(0, 2, 1, "Completed")
+        popup.menu.add(0, 3, 2, "Missed")
+
+        popup.setOnMenuItemClickListener { menuItem ->
+            // 1. Determine the new filter and the corresponding text
+            val newText: String
+            currentFilter = when (menuItem.itemId) {
+                1 -> {
+                    newText = "Ongoing"
+                    TaskFilter.ONGOING
+                }
+                2 -> {
+                    newText = "Completed"
+                    TaskFilter.COMPLETED
+                }
+                else -> { // Default to Missed
+                    newText = "Missed"
+                    TaskFilter.MISSED
+                }
+
+            }
+
+            // 2. CRITICAL FIX: Update the TextView's text
+            tvFilterOngoing.text = newText
+
+            // 3. Load the tasks based on the new filter
+            loadCourseTasks()
+
+            true // Return true to indicate the click was handled
         }
         popup.show()
     }
