@@ -1,6 +1,8 @@
 package com.example.sorty.ui.subjects
 
+import android.app.AlertDialog
 import android.content.Intent
+import com.example.sorty.data.models.SharedUser
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -10,13 +12,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.view.View
-import android.widget.Button
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.PopupMenu
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -25,19 +21,18 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.sorty.DatabaseHelper
 import com.example.sorty.R
 import com.example.sorty.SessionManager
-import com.example.sorty.data.models.SubjectFile
 import com.example.sorty.ui.home.TaskDetailFragment
 import com.example.sorty.ui.home.TaskFilter
 import com.example.sorty.ui.home.TodoAdapter
 import com.example.sorty.ui.home.addNotes
 import com.google.android.material.snackbar.Snackbar
 import java.util.Locale
-import android.content.ContentValues
 
 class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener, ShareBottomSheet.ShareBottomSheetListener {
 
@@ -45,6 +40,7 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
     private lateinit var btnBack: ImageButton
     private lateinit var tvSubjectName: TextView
     private lateinit var tvSubjectDescription: TextView
+    private lateinit var tvOwner: TextView
     private lateinit var btnEditCourse: ImageView
     private lateinit var bgSubject: View
     private lateinit var tabTodo: TextView
@@ -64,13 +60,11 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
     private lateinit var rvTodoList: RecyclerView
     private lateinit var layoutEmptyState: LinearLayout
     private lateinit var todoAdapter: TodoAdapter
-
     private lateinit var rvFilesList: RecyclerView
     private lateinit var fileAdapter: FileAdapter
 
     private lateinit var dbHelper: DatabaseHelper
     private lateinit var sessionManager: SessionManager
-
 
     private var currentCourseId: Int = -1
     private var currentCourseName: String = ""
@@ -79,6 +73,7 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
     private var currentFilter: TaskFilter = TaskFilter.ONGOING
     private var currentUserEmail: String = ""
     private var isCurrentlyArchived: Boolean = false
+    private var currentSubjectOwnerEmail: String = ""
 
     // File Picker
     private val pickFileLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
@@ -90,17 +85,7 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
             val fileType = contentResolver.getType(uri) ?: "application/octet-stream"
 
             val success = dbHelper.insertFile(currentUserEmail, fileName, uri.toString(), fileType, currentCourseName)
-
-            if (success) {
-                Snackbar.make(bgSubject, "File Added: $fileName", Snackbar.LENGTH_SHORT)
-                    .setBackgroundTint(ContextCompat.getColor(this, R.color.primary_green))
-                    .setTextColor(Color.WHITE)
-                    .show()
-
-                loadCourseFiles()
-            } else {
-                Toast.makeText(this, "Failed to save file", Toast.LENGTH_SHORT).show()
-            }
+            if (success) loadCourseFiles()
         }
     }
 
@@ -114,30 +99,26 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
         sessionManager = SessionManager(this)
         currentUserEmail = sessionManager.getEmail() ?: ""
 
+        initViews()
+        loadCourseData()
+        setupRecyclerView()
+        setupFileRecyclerView()
+        setupListeners()
+        setupTabs()
+        setupSwipeToDelete()
+
         val windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
         windowInsetsController.isAppearanceLightNavigationBars = true
 
-        val rootView = findViewById<View>(R.id.bg_subject)
-        ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.bg_subject)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        // 👇 ADD THIS TO REFRESH THE LIST IMMEDIATELY
         supportFragmentManager.setFragmentResultListener("task_updated", this) { _, bundle ->
-            if (bundle.getBoolean("refresh")) {
-                loadCourseTasks() // This triggers your refresh logic
-            }
+            if (bundle.getBoolean("refresh")) loadCourseTasks()
         }
-
-        initViews()
-        loadCourseData()
-        setupRecyclerView()
-        setupFileRecyclerView()
-        setupSwipeToDelete()
-        setupListeners()
-        setupTabs()
     }
 
     override fun onResume() {
@@ -150,6 +131,7 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
         btnBack = findViewById(R.id.btn_back)
         tvSubjectName = findViewById(R.id.tv_subject_name)
         tvSubjectDescription = findViewById(R.id.tv_subject_description)
+        tvOwner = findViewById(R.id.tv_owner)
         btnEditCourse = findViewById(R.id.btn_edit_course)
         bgSubject = findViewById(R.id.bg_subject)
         tabTodo = findViewById(R.id.tab_todo)
@@ -169,20 +151,25 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
         currentCourseId = intent.getIntExtra("COURSE_ID", -1)
         if (currentCourseId != -1) {
             val subject = dbHelper.getSubjectById(currentCourseId)
-            if (subject != null) {
-                currentCourseName = subject.name
-                currentCourseDesc = subject.description
-                currentCourseColor = subject.color
-
-                // 👇 Store the archive status (Assuming your Subject model has isArchived)
-                // If your model doesn't have it yet, ensure getSubjectById returns the is_archived column
-                isCurrentlyArchived = subject.isArchived
+            subject?.let {
+                currentCourseName = it.name
+                currentCourseDesc = it.description
+                currentCourseColor = it.color
+                isCurrentlyArchived = it.isArchived
+                currentSubjectOwnerEmail = it.ownerEmail
 
                 tvSubjectName.text = currentCourseName
                 tvSubjectDescription.text = currentCourseDesc
+
+                // Ownership text
+                if (currentUserEmail.equals(currentSubjectOwnerEmail, ignoreCase = true)) {
+                    tvOwner.text = "Your Folder"
+                } else {
+                    tvOwner.text = "Folder by: $currentSubjectOwnerEmail"
+                }
+
                 try {
-                    val colorInt = Color.parseColor(currentCourseColor)
-                    bgSubject.setBackgroundColor(colorInt)
+                    bgSubject.setBackgroundColor(Color.parseColor(currentCourseColor))
                 } catch (e: Exception) {
                     bgSubject.setBackgroundColor(Color.parseColor("#FF8A80"))
                 }
@@ -190,355 +177,281 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
         }
     }
 
-    private fun setupRecyclerView() {
-        todoAdapter = TodoAdapter(
-            tasks = emptyList(),
-            onItemClicked = { task ->
-                val detailFragment = TaskDetailFragment.newInstance(task.id)
-                detailFragment.show(supportFragmentManager, "TaskDetailSheet")
-            },
-            onCheckboxClicked = { task, isChecked ->
-                val success = dbHelper.updateTaskCompletion(task.id, isCompleted = isChecked)
-                if (success) loadCourseTasks()
+    private fun showOptionsMenu(view: View) {
+        val popup = PopupMenu(this, view)
+        popup.menuInflater.inflate(R.menu.subject_options_menu, popup.menu)
+
+        val isOwner = currentUserEmail.equals(currentSubjectOwnerEmail, ignoreCase = true)
+
+        val archiveItem = popup.menu.findItem(R.id.action_archive_subject)
+        val shareItem = popup.menu.findItem(R.id.action_share_subject)
+        val editItem = popup.menu.findItem(R.id.action_edit_subject)
+
+        // Handle "Remove my Access" visibility based on ownership
+        if (isOwner) {
+            // Owner sees Edit and Share, but NO "Remove Access"
+            shareItem?.isVisible = true
+            editItem?.isVisible = true
+        } else {
+            // Guest sees NO Edit or Share, but gets "Remove Access"
+            shareItem?.isVisible = false
+            editItem?.isVisible = false
+            popup.menu.add("Remove my Access") // Programmatically add for guests only
+        }
+
+        archiveItem?.title = if (isCurrentlyArchived) "Remove from Archive" else "Move to Archive"
+
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_edit_subject -> {
+                    val bottomSheet = AddNewSubject.newInstance(currentCourseId, currentCourseName, currentCourseDesc, currentCourseColor)
+                    bottomSheet.setAddNewSubjectListener(this)
+                    bottomSheet.show(supportFragmentManager, "EditSubject")
+                    true
+                }
+                R.id.action_archive_subject -> {
+                    if (isCurrentlyArchived) {
+                        if (dbHelper.unarchiveSubject(currentCourseId)) finish()
+                    } else {
+                        archiveSubjectConfirmation()
+                    }
+                    true
+                }
+                R.id.action_share_subject -> {
+                    val bottomSheet = ShareBottomSheet()
+                    bottomSheet.setShareListener(this)
+                    bottomSheet.show(supportFragmentManager, "ShareSheet")
+                    true
+                }
+                else -> {
+                    if (item.title == "Remove my Access") {
+                        showRemoveAccessConfirmation()
+                        true
+                    } else false
+                }
             }
-        )
+        }
+        popup.show()
+    }
+
+    private fun showRemoveAccessConfirmation() {
+        // 1. Inflate the custom layout
+        val dialogView = layoutInflater.inflate(R.layout.dialog_reset_confirmation, null)
+
+        // 2. Build the dialog
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        // 3. Set the background to transparent so the CardView corners are visible
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        // 4. Update the text fields to match the "Remove Access" context
+        val tvTitle = dialogView.findViewById<TextView>(R.id.tv_title)
+        val tvMessage = dialogView.findViewById<TextView>(R.id.tv_message)
+        val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
+        val btnConfirm = dialogView.findViewById<Button>(R.id.btn_confirm)
+
+        tvTitle.text = "Remove Access?"
+        tvMessage.text = "Are you sure you want to remove your access to '$currentCourseName'? This will delete your local copy and its contents."
+        btnConfirm.text = "Remove"
+
+        // Optional: Change the button color to match your app's theme if you don't want "Reset Red"
+        // btnConfirm.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#FF5252"))
+
+        // 5. Set up button listeners
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        btnConfirm.setOnClickListener {
+            if (dbHelper.removeGuestAccess(currentUserEmail, currentCourseName)) {
+                dialog.dismiss()
+                finish()
+            } else {
+                Toast.makeText(this, "Error removing access", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun archiveSubjectConfirmation() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_confirm_save, null)
+        val dialog = AlertDialog.Builder(this).setView(dialogView).create()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialogView.findViewById<TextView>(R.id.tv_title).text = "Archive Folder"
+        dialogView.findViewById<Button>(R.id.btn_confirm).setOnClickListener {
+            if (dbHelper.archiveSubject(currentCourseId)) {
+                dialog.dismiss()
+                finish()
+            }
+        }
+        dialogView.findViewById<Button>(R.id.btn_cancel).setOnClickListener { dialog.dismiss() }
+        dialog.show()
+    }
+
+    // --- ShareBottomSheet Listeners ---
+    override fun checkUserExists(email: String) = dbHelper.checkUserExists(email)
+    override fun onShareList(emails: List<String>) {
+        emails.forEach { dbHelper.cloneSubjectToUser(currentCourseId, it) }
+    }
+    override fun getSharedUsers() = dbHelper.getUsersWithAccess(currentCourseName, currentUserEmail)
+    override fun onRemoveAccess(email: String) { dbHelper.removeGuestAccess(email, currentCourseName) }
+
+    private fun setupRecyclerView() {
+        todoAdapter = TodoAdapter(emptyList(), { task ->
+            TaskDetailFragment.newInstance(task.id).show(supportFragmentManager, "TaskDetail")
+        }, { task, isChecked ->
+            if (dbHelper.updateTaskCompletion(task.id, isChecked)) loadCourseTasks()
+        })
         rvTodoList.layoutManager = LinearLayoutManager(this)
         rvTodoList.adapter = todoAdapter
     }
 
     private fun setupFileRecyclerView() {
         fileAdapter = FileAdapter(emptyList()) { file ->
-            try {
-                val intent = Intent(Intent.ACTION_VIEW)
-                intent.setDataAndType(Uri.parse(file.uri), file.type)
-                intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                startActivity(intent)
-            } catch (e: Exception) {
-                Toast.makeText(this, "Cannot open file", Toast.LENGTH_SHORT).show()
-            }
+            val intent = Intent(Intent.ACTION_VIEW).setDataAndType(Uri.parse(file.uri), file.type)
+            intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+            try { startActivity(intent) } catch (e: Exception) { }
         }
         rvFilesList.layoutManager = LinearLayoutManager(this)
         rvFilesList.adapter = fileAdapter
     }
 
     fun loadCourseTasks() {
-        if (currentUserEmail.isEmpty()) return
-        val currentTime = System.currentTimeMillis()
-        val statusTasks = when (currentFilter) {
-            TaskFilter.ONGOING -> dbHelper.getOngoingTasks(currentUserEmail, currentTime)
+        val tasks = when (currentFilter) {
+            TaskFilter.ONGOING -> dbHelper.getOngoingTasks(currentUserEmail, System.currentTimeMillis())
             TaskFilter.COMPLETED -> dbHelper.getCompletedTasks(currentUserEmail)
-            TaskFilter.MISSED -> dbHelper.getMissedTasks(currentUserEmail, currentTime)
-        }
-        val finalTasks = statusTasks.filter { it.category.equals(currentCourseName, ignoreCase = true) }
-        tvFilterOngoing.backgroundTintList = null
+            TaskFilter.MISSED -> dbHelper.getMissedTasks(currentUserEmail, System.currentTimeMillis())
+        }.filter { it.category.equals(currentCourseName, ignoreCase = true) }
 
-        // Update Filter Text
-        tvFilterOngoing.text = currentFilter.name.lowercase().replaceFirstChar { it.titlecase(Locale.getDefault()) }
-
-        // 👇 Set the background and ensure text is visible (Green or Black on White)
-        tvFilterOngoing.setBackgroundResource(R.drawable.bg_edit_button)
-        tvFilterOngoing.setTextColor(ContextCompat.getColor(this, R.color.black))
-
-        if (finalTasks.isEmpty()) {
-            rvTodoList.visibility = View.GONE
-            layoutEmptyState.visibility = View.VISIBLE
-        } else {
-            rvTodoList.visibility = View.VISIBLE
-            layoutEmptyState.visibility = View.GONE
-            todoAdapter.updateTasks(finalTasks)
-        }
+        todoAdapter.updateTasks(tasks)
+        layoutEmptyState.visibility = if (tasks.isEmpty()) View.VISIBLE else View.GONE
+        rvTodoList.visibility = if (tasks.isEmpty()) View.GONE else View.VISIBLE
     }
 
     private fun loadCourseFiles() {
-        if (currentUserEmail.isEmpty()) return
         val files = dbHelper.getFilesForSubject(currentUserEmail, currentCourseName)
-        if (files.isEmpty()) {
-            rvFilesList.visibility = View.GONE
-            layoutFilesEmptyState.visibility = View.VISIBLE
-        } else {
-            rvFilesList.visibility = View.VISIBLE
-            layoutFilesEmptyState.visibility = View.GONE
-            fileAdapter.updateFiles(files)
-        }
+        fileAdapter.updateFiles(files)
+        layoutFilesEmptyState.visibility = if (files.isEmpty()) View.VISIBLE else View.GONE
+        rvFilesList.visibility = if (files.isEmpty()) View.GONE else View.VISIBLE
     }
 
     private fun setupListeners() {
         btnBack.setOnClickListener { finish() }
-        btnEditCourse.setOnClickListener { view -> showOptionsMenu(view) }
+        btnEditCourse.setOnClickListener { showOptionsMenu(it) }
         btnAddTodo.setOnClickListener {
-            val bottomSheet = addNotes()
-            val args = Bundle()
-            args.putString("arg_preset_subject", currentCourseName)
-            bottomSheet.arguments = args
-            bottomSheet.show(supportFragmentManager, "AddNotesSheet")
+            val sheet = addNotes()
+            sheet.arguments = Bundle().apply { putString("arg_preset_subject", currentCourseName) }
+            sheet.show(supportFragmentManager, "AddNotes")
         }
         btnAddFile.setOnClickListener { pickFileLauncher.launch(arrayOf("*/*")) }
         tvFilterOngoing.setOnClickListener { showFilterMenu(it) }
     }
 
-    private fun showOptionsMenu(view: View) {
-        val popup = PopupMenu(this, view)
-        popup.menuInflater.inflate(R.menu.subject_options_menu, popup.menu)
-
-        // 1. Dynamic Menu Text: Check if the subject is currently archived
-        val archiveItem = popup.menu.findItem(R.id.action_archive_subject)
-        if (isCurrentlyArchived) {
-            archiveItem.title = "Remove from Archive"
-        } else {
-            archiveItem.title = "Move to Archive"
-        }
-
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                R.id.action_edit_subject -> {
-                    val bottomSheet = AddNewSubject.newInstance(
-                        currentCourseId,
-                        currentCourseName,
-                        currentCourseDesc,
-                        currentCourseColor
-                    )
-                    bottomSheet.setAddNewSubjectListener(this)
-                    bottomSheet.show(supportFragmentManager, "EditSubject")
-                    true
-                }
-
-                R.id.action_archive_subject -> {
-                    if (isCurrentlyArchived) {
-                        // 2. Handle Unarchive Logic
-                        val success = dbHelper.unarchiveSubject(currentCourseId)
-                        if (success) {
-                            Toast.makeText(this, "Subject removed from archive", Toast.LENGTH_SHORT).show()
-                            // Return to the previous screen (Archives list) to see it removed
-                            finish()
-                        } else {
-                            Toast.makeText(this, "Failed to unarchive", Toast.LENGTH_SHORT).show()
-                        }
-                    } else {
-                        // 3. Handle Archive Logic (Shows confirmation dialog)
-                        archiveSubjectConfirmation()
-                    }
-                    true
-                }
-
-                R.id.action_share_subject -> {
-                    shareSubject()
-                    true
-                }
-
-                else -> false
-            }
-        }
-        popup.show()
-    }
-
-    private fun shareSubject() {
-        val bottomSheet = ShareBottomSheet()
-        bottomSheet.setShareListener(this)
-        bottomSheet.show(supportFragmentManager, "ShareSheet")
-    }
-
-    // --- ShareBottomSheetListener ---
-    override fun checkUserExists(email: String): Boolean {
-        if (email == currentUserEmail) return false
-        // Call function from dbHelper instance
-        return dbHelper.checkUserExists(email)
-    }
-
-    override fun onShareList(emails: List<String>) {
-        var successCount = 0
-        for (email in emails) {
-            // Call function from dbHelper instance
-            val success = dbHelper.cloneSubjectToUser(currentCourseId, email)
-            if (success) successCount++
-        }
-        if (successCount > 0) {
-            Toast.makeText(this, "Subject shared with $successCount users!", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(this, "Failed to share subject", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun archiveSubjectConfirmation() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_confirm_save, null)
-        val builder = android.app.AlertDialog.Builder(this)
-        builder.setView(dialogView)
-        val dialog = builder.create()
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-        val tvTitle = dialogView.findViewById<TextView>(R.id.tv_title)
-        val tvMessage = dialogView.findViewById<TextView>(R.id.tv_message)
-        val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
-        val btnConfirm = dialogView.findViewById<Button>(R.id.btn_confirm)
-
-        tvTitle.text = "Archive Subject"
-        tvMessage.text = "Are you sure you want to move '$currentCourseName' to the archive?"
-        btnConfirm.text = "Archive"
-
-        btnCancel.setOnClickListener { dialog.dismiss() }
-
-        btnConfirm.setOnClickListener {
-            // 👇 ACTUAL ARCHIVE LOGIC START
-            val success = dbHelper.archiveSubject(currentCourseId)
-
-            if (success) {
-                Toast.makeText(this, "$currentCourseName moved to Archives", Toast.LENGTH_SHORT).show()
-                dialog.dismiss()
-
-                // Go back to the Subjects list
-                finish()
-            } else {
-                Toast.makeText(this, "Failed to archive subject", Toast.LENGTH_SHORT).show()
-            }
-            // 👆 ACTUAL ARCHIVE LOGIC END
-        }
-        dialog.show()
-    }
-
     private fun showFilterMenu(view: View) {
         val popup = PopupMenu(this, view)
-        popup.menu.apply {
-            add(0, 1, 0, "Ongoing")
-            add(0, 2, 1, "Completed")
-            add(0, 3, 2, "Missed")
-        }
-        popup.setOnMenuItemClickListener { menuItem ->
-            val selectedFilter = when (menuItem.itemId) {
-                1 -> TaskFilter.ONGOING
-                2 -> TaskFilter.COMPLETED
-                3 -> TaskFilter.MISSED
-                else -> currentFilter
-            }
-            if (selectedFilter != currentFilter) {
-                currentFilter = selectedFilter
-                loadCourseTasks()
-            }
-            true
+        popup.menu.add(0, 1, 0, "Ongoing"); popup.menu.add(0, 2, 1, "Completed"); popup.menu.add(0, 3, 2, "Missed")
+        popup.setOnMenuItemClickListener {
+            currentFilter = when(it.itemId) { 1 -> TaskFilter.ONGOING; 2 -> TaskFilter.COMPLETED; else -> TaskFilter.MISSED }
+            loadCourseTasks(); true
         }
         popup.show()
     }
 
     private fun setupTabs() {
-        tabTodo.setOnClickListener { updateTabSelection(isTodoSelected = true) }
-        tabFiles.setOnClickListener { updateTabSelection(isTodoSelected = false) }
+        tabTodo.setOnClickListener { updateTabSelection(true) }
+        tabFiles.setOnClickListener { updateTabSelection(false) }
     }
 
     private fun updateTabSelection(isTodoSelected: Boolean) {
+        // 1. Handle Visibility
+        layoutContentTodo.visibility = if (isTodoSelected) View.VISIBLE else View.GONE
+        layoutContentFiles.visibility = if (isTodoSelected) View.GONE else View.VISIBLE
+
+        // 2. Handle Backgrounds and Text Colors
         if (isTodoSelected) {
-            layoutContentTodo.visibility = View.VISIBLE
-            layoutContentFiles.visibility = View.GONE
+            // Todo Tab is Active
             tabTodo.setBackgroundResource(R.drawable.bg_tab_selected_rounded)
+            tabTodo.setTextColor(Color.WHITE)
+
+            // Files Tab is Inactive
             tabFiles.setBackgroundResource(R.drawable.bg_tab_unselected_rounded)
-            tabTodo.setTextColor(ContextCompat.getColor(this, R.color.white))
             tabFiles.setTextColor(ContextCompat.getColor(this, R.color.grey_text))
         } else {
-            layoutContentTodo.visibility = View.GONE
-            layoutContentFiles.visibility = View.VISIBLE
+            // Todo Tab is Inactive
             tabTodo.setBackgroundResource(R.drawable.bg_tab_unselected_rounded)
-            tabFiles.setBackgroundResource(R.drawable.bg_tab_selected_rounded)
             tabTodo.setTextColor(ContextCompat.getColor(this, R.color.grey_text))
-            tabFiles.setTextColor(ContextCompat.getColor(this, R.color.white))
+
+            // Files Tab is Active
+            tabFiles.setBackgroundResource(R.drawable.bg_tab_selected_rounded)
+            tabFiles.setTextColor(Color.WHITE)
+
             loadCourseFiles()
         }
     }
 
     private fun setupSwipeToDelete() {
-        val deleteIcon = ContextCompat.getDrawable(this, R.drawable.baseline_delete_outline_24)!!
-        val paint = Paint().apply {
-            color = Color.parseColor("#FF5252")
-            isAntiAlias = true
-        }
-        val cornerRadius = 12 * resources.displayMetrics.density
-
-        val swipeHandler = object : androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback(
-            0,
-            androidx.recyclerview.widget.ItemTouchHelper.LEFT or androidx.recyclerview.widget.ItemTouchHelper.RIGHT
-        ) {
-            override fun onMove(recyclerView: RecyclerView, vH: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean = false
-            override fun onChildDraw(c: Canvas, rV: RecyclerView, vH: RecyclerView.ViewHolder, dX: Float, dY: Float, aS: Int, iA: Boolean) {
-                val itemView = vH.itemView
-                val itemHeight = itemView.bottom - itemView.top
-                val verticalMargin = (itemHeight * 0.15).toInt()
-                val buttonSize = itemHeight - (verticalMargin * 2)
-                val iconMargin = (buttonSize - deleteIcon.intrinsicHeight) / 2
-                val background = RectF()
-
-                if (dX > 0) {
-                    background.set(itemView.left.toFloat() + verticalMargin, itemView.top.toFloat() + verticalMargin, itemView.left.toFloat() + verticalMargin + buttonSize, itemView.top.toFloat() + verticalMargin + buttonSize)
-                    c.drawRoundRect(background, cornerRadius, cornerRadius, paint)
-                    deleteIcon.setBounds((background.left + iconMargin).toInt(), (background.top + iconMargin).toInt(), (background.right - iconMargin).toInt(), (background.bottom - iconMargin).toInt())
-                    deleteIcon.setTint(Color.WHITE)
-                    deleteIcon.draw(c)
-                } else if (dX < 0) {
-                    background.set(itemView.right.toFloat() - verticalMargin - buttonSize, itemView.top.toFloat() + verticalMargin, itemView.right.toFloat() - verticalMargin, itemView.top.toFloat() + verticalMargin + buttonSize)
-                    c.drawRoundRect(background, cornerRadius, cornerRadius, paint)
-                    deleteIcon.setBounds((background.left + iconMargin).toInt(), (background.top + iconMargin).toInt(), (background.right - iconMargin).toInt(), (background.bottom - iconMargin).toInt())
-                    deleteIcon.setTint(Color.WHITE)
-                    deleteIcon.draw(c)
-                }
-                super.onChildDraw(c, rV, vH, dX, dY, aS, iA)
-            }
+        val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+            override fun onMove(r: RecyclerView, v: RecyclerView.ViewHolder, t: RecyclerView.ViewHolder) = false
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val position = viewHolder.adapterPosition
                 val fileToDelete = fileAdapter.getFileAt(position)
-                val dialogView = layoutInflater.inflate(R.layout.dialog_confirm_save, null)
-                val builder = android.app.AlertDialog.Builder(this@CourseActivity)
-                builder.setView(dialogView)
-                val dialog = builder.create()
+
+                // 1. Inflate the custom dialog layout
+                val dialogView = layoutInflater.inflate(R.layout.dialog_reset_confirmation, null)
+                val dialog = AlertDialog.Builder(this@CourseActivity).setView(dialogView).create()
                 dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
+                // 2. Bind the custom views
                 val tvTitle = dialogView.findViewById<TextView>(R.id.tv_title)
                 val tvMessage = dialogView.findViewById<TextView>(R.id.tv_message)
                 val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
                 val btnConfirm = dialogView.findViewById<Button>(R.id.btn_confirm)
 
-                tvTitle.text = "Delete File"
-                tvMessage.text = "Are you sure you want to delete '${fileToDelete.name}'?"
+                // 3. Customize text for file deletion
+                tvTitle.text = "Delete File?"
+                tvMessage.text = "Are you sure you want to delete '${fileToDelete.name}'? This will remove the file for all shared users."
                 btnConfirm.text = "Delete"
-                btnConfirm.backgroundTintList = ContextCompat.getColorStateList(this@CourseActivity, android.R.color.holo_red_dark)
 
+                // 4. Set Listeners
                 btnCancel.setOnClickListener {
                     dialog.dismiss()
+                    // IMPORTANT: Refresh the item so it swipes back into place if cancelled
                     fileAdapter.notifyItemChanged(position)
                 }
+
                 btnConfirm.setOnClickListener {
                     if (dbHelper.deleteFile(fileToDelete.id)) {
                         loadCourseFiles()
-                        Snackbar.make(bgSubject, "File deleted", Snackbar.LENGTH_SHORT).show()
+                        dialog.dismiss()
+                    } else {
+                        Toast.makeText(this@CourseActivity, "Failed to delete file", Toast.LENGTH_SHORT).show()
+                        fileAdapter.notifyItemChanged(position)
+                        dialog.dismiss()
                     }
-                    dialog.dismiss()
                 }
+
+                // Ensure the item swipes back if the dialog is dismissed via back button or outside click
+                dialog.setOnCancelListener { fileAdapter.notifyItemChanged(position) }
+
                 dialog.show()
             }
         }
-        androidx.recyclerview.widget.ItemTouchHelper(swipeHandler).attachToRecyclerView(rvFilesList)
+        ItemTouchHelper(swipeHandler).attachToRecyclerView(rvFilesList)
     }
 
     private fun getFileNameFromUri(uri: Uri): String {
         var result: String? = null
         if (uri.scheme == "content") {
-            val cursor = contentResolver.query(uri, null, null, null, null)
-            cursor.use { if (it != null && it.moveToFirst()) result = it.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME)) }
+            contentResolver.query(uri, null, null, null, null)?.use { if (it.moveToFirst()) result = it.getString(it.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME)) }
         }
-        if (result == null) {
-            result = uri.path
-            val cut = result?.lastIndexOf('/')
-            if (cut != null && cut != -1) result = result?.substring(cut + 1)
-        }
-        return result ?: "Unknown File"
+        return result ?: uri.path?.substringAfterLast('/') ?: "file"
     }
 
     override fun onSubjectAdded(name: String, desc: String, color: String) {}
-    override fun onSubjectUpdated(id: Int, name: String, desc: String, color: String) {
-        if (dbHelper.updateSubject(id, name, desc, color)) {
-            Snackbar.make(bgSubject, "Subject Updated!", Snackbar.LENGTH_SHORT).show()
-            loadCourseData()
-        }
-    }
-    override fun onSubjectDeleted(id: Int) {
-        if (dbHelper.deleteSubject(id)) {
-            Toast.makeText(this, "Subject Deleted", Toast.LENGTH_SHORT).show()
-            finish()
-        }
-    }
+    override fun onSubjectUpdated(id: Int, name: String, desc: String, color: String) { if (dbHelper.updateSubject(id, name, desc, color)) loadCourseData() }
+    override fun onSubjectDeleted(id: Int) { if (dbHelper.deleteSubject(id)) finish() }
 }

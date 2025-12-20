@@ -134,16 +134,18 @@ class AddNewSubject : BottomSheetDialogFragment() {
 
             if (subjectName.isNotEmpty()) {
                 if (isEditMode) {
+                    // When updating, we use the ID we retrieved from arguments
                     listener?.onSubjectUpdated(editId, subjectName, finalDesc, selectedColorHex)
                 } else {
+                    // NOTE: Ensure your HomeFragment or CourseActivity
+                    // implementation of onSubjectAdded handles the current user's email
                     listener?.onSubjectAdded(subjectName, finalDesc, selectedColorHex)
                 }
                 dismiss()
             } else {
-                // 👇 REPLACED TOAST WITH SNACKBAR 👇
                 Snackbar.make(bind.root, "Subject name can't be empty", Snackbar.LENGTH_SHORT)
-                    .setAnchorView(bind.buttonAdd) // Floats above the button
-                    .setBackgroundTint(Color.parseColor("#FF5252")) // Red error color
+                    .setAnchorView(bind.buttonAdd)
+                    .setBackgroundTint(Color.parseColor("#FF5252"))
                     .setTextColor(Color.WHITE)
                     .show()
             }

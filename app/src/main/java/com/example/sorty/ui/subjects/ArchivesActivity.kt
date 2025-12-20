@@ -11,6 +11,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.sorty.DatabaseHelper
 import com.example.sorty.SessionManager
+import com.example.sorty.data.models.Subject
 import com.example.sorty.databinding.ActivityArchivesBinding
 
 class ArchivesActivity : AppCompatActivity() {
