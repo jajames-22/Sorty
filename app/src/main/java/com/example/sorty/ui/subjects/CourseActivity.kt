@@ -146,7 +146,6 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
         rvFilesList = findViewById(R.id.rv_files_list)
         layoutFilesEmptyState = findViewById(R.id.layout_files_empty_state)
         tvFilterOngoing.setBackgroundColor(Color.WHITE)
-
     }
 
     private fun loadCourseData() {
@@ -163,7 +162,6 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
                 tvSubjectName.text = currentCourseName
                 tvSubjectDescription.text = currentCourseDesc
 
-                // Ownership text
                 if (currentUserEmail.equals(currentSubjectOwnerEmail, ignoreCase = true)) {
                     tvOwner.text = "Your Folder"
                 } else {
@@ -189,16 +187,13 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
         val shareItem = popup.menu.findItem(R.id.action_share_subject)
         val editItem = popup.menu.findItem(R.id.action_edit_subject)
 
-        // Handle "Remove my Access" visibility based on ownership
         if (isOwner) {
-            // Owner sees Edit and Share, but NO "Remove Access"
             shareItem?.isVisible = true
             editItem?.isVisible = true
         } else {
-            // Guest sees NO Edit or Share, but gets "Remove Access"
             shareItem?.isVisible = false
             editItem?.isVisible = false
-            popup.menu.add("Remove my Access") // Programmatically add for guests only
+            popup.menu.add("Remove my Access")
         }
 
         archiveItem?.title = if (isCurrentlyArchived) "Remove from Archive" else "Move to Archive"
@@ -211,14 +206,28 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
                     bottomSheet.show(supportFragmentManager, "EditSubject")
                     true
                 }
+                // ======================== THE FIX ========================
                 R.id.action_archive_subject -> {
                     if (isCurrentlyArchived) {
-                        if (dbHelper.unarchiveSubject(currentCourseId)) finish()
+                        // Unarchiving a folder.
+                        if (dbHelper.unarchiveSubject(currentCourseId)) {
+                            Toast.makeText(this, "'$currentCourseName' removed from archive.", Toast.LENGTH_SHORT).show()
+                            finish()
+                        } else {
+                            Toast.makeText(this, "Failed to unarchive folder.", Toast.LENGTH_SHORT).show()
+                        }
                     } else {
-                        archiveSubjectConfirmation()
+                        // Archiving a folder directly with a Toast.
+                        if (dbHelper.archiveSubject(currentCourseId)) {
+                            Toast.makeText(this, "'$currentCourseName' moved to archive.", Toast.LENGTH_SHORT).show()
+                            finish()
+                        } else {
+                            Toast.makeText(this, "Failed to archive folder.", Toast.LENGTH_SHORT).show()
+                        }
                     }
                     true
                 }
+                // ========================================================
                 R.id.action_share_subject -> {
                     val bottomSheet = ShareBottomSheet()
                     bottomSheet.setShareListener(this)
@@ -237,18 +246,10 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
     }
 
     private fun showRemoveAccessConfirmation() {
-        // 1. Inflate the custom layout
         val dialogView = layoutInflater.inflate(R.layout.dialog_reset_confirmation, null)
-
-        // 2. Build the dialog
-        val dialog = AlertDialog.Builder(this)
-            .setView(dialogView)
-            .create()
-
-        // 3. Set the background to transparent so the CardView corners are visible
+        val dialog = AlertDialog.Builder(this).setView(dialogView).create()
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
-        // 4. Update the text fields to match the "Remove Access" context
         val tvTitle = dialogView.findViewById<TextView>(R.id.tv_title)
         val tvMessage = dialogView.findViewById<TextView>(R.id.tv_message)
         val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
@@ -258,14 +259,7 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
         tvMessage.text = "Are you sure you want to remove your access to '$currentCourseName'? This will delete your local copy and its contents."
         btnConfirm.text = "Remove"
 
-        // Optional: Change the button color to match your app's theme if you don't want "Reset Red"
-        // btnConfirm.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#FF5252"))
-
-        // 5. Set up button listeners
-        btnCancel.setOnClickListener {
-            dialog.dismiss()
-        }
-
+        btnCancel.setOnClickListener { dialog.dismiss() }
         btnConfirm.setOnClickListener {
             if (dbHelper.removeGuestAccess(currentUserEmail, currentCourseName)) {
                 dialog.dismiss()
@@ -274,24 +268,10 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
                 Toast.makeText(this, "Error removing access", Toast.LENGTH_SHORT).show()
             }
         }
-
         dialog.show()
     }
 
-    private fun archiveSubjectConfirmation() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_confirm_save, null)
-        val dialog = AlertDialog.Builder(this).setView(dialogView).create()
-        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialogView.findViewById<TextView>(R.id.tv_title).text = "Archive Folder"
-        dialogView.findViewById<Button>(R.id.btn_confirm).setOnClickListener {
-            if (dbHelper.archiveSubject(currentCourseId)) {
-                dialog.dismiss()
-                finish()
-            }
-        }
-        dialogView.findViewById<Button>(R.id.btn_cancel).setOnClickListener { dialog.dismiss() }
-        dialog.show()
-    }
+    // --- The archiveSubjectConfirmation() function has been removed as it's no longer used. ---
 
     // --- ShareBottomSheet Listeners ---
     override fun checkUserExists(email: String) = dbHelper.checkUserExists(email)
@@ -300,6 +280,8 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
     }
     override fun getSharedUsers() = dbHelper.getUsersWithAccess(currentCourseName, currentUserEmail)
     override fun onRemoveAccess(email: String) { dbHelper.removeGuestAccess(email, currentCourseName) }
+
+    // --- Other functions (setupRecyclerView, loadCourseTasks, etc.) remain unchanged ---
 
     private fun setupRecyclerView() {
         todoAdapter = TodoAdapter(emptyList(), { task ->
@@ -354,37 +336,20 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
 
     private fun showFilterMenu(view: View) {
         val popup = PopupMenu(this, view)
-        // Add menu items
         popup.menu.add(0, 1, 0, "Ongoing")
         popup.menu.add(0, 2, 1, "Completed")
         popup.menu.add(0, 3, 2, "Missed")
 
         popup.setOnMenuItemClickListener { menuItem ->
-            // 1. Determine the new filter and the corresponding text
             val newText: String
             currentFilter = when (menuItem.itemId) {
-                1 -> {
-                    newText = "Ongoing"
-                    TaskFilter.ONGOING
-                }
-                2 -> {
-                    newText = "Completed"
-                    TaskFilter.COMPLETED
-                }
-                else -> { // Default to Missed
-                    newText = "Missed"
-                    TaskFilter.MISSED
-                }
-
+                1 -> { newText = "Ongoing"; TaskFilter.ONGOING }
+                2 -> { newText = "Completed"; TaskFilter.COMPLETED }
+                else -> { newText = "Missed"; TaskFilter.MISSED }
             }
-
-            // 2. CRITICAL FIX: Update the TextView's text
             tvFilterOngoing.text = newText
-
-            // 3. Load the tasks based on the new filter
             loadCourseTasks()
-
-            true // Return true to indicate the click was handled
+            true
         }
         popup.show()
     }
@@ -395,28 +360,19 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
     }
 
     private fun updateTabSelection(isTodoSelected: Boolean) {
-        // 1. Handle Visibility
         layoutContentTodo.visibility = if (isTodoSelected) View.VISIBLE else View.GONE
         layoutContentFiles.visibility = if (isTodoSelected) View.GONE else View.VISIBLE
 
-        // 2. Handle Backgrounds and Text Colors
         if (isTodoSelected) {
-            // Todo Tab is Active
             tabTodo.setBackgroundResource(R.drawable.bg_tab_selected_rounded)
             tabTodo.setTextColor(Color.WHITE)
-
-            // Files Tab is Inactive
             tabFiles.setBackgroundResource(R.drawable.bg_tab_unselected_rounded)
             tabFiles.setTextColor(ContextCompat.getColor(this, R.color.grey_text))
         } else {
-            // Todo Tab is Inactive
             tabTodo.setBackgroundResource(R.drawable.bg_tab_unselected_rounded)
             tabTodo.setTextColor(ContextCompat.getColor(this, R.color.grey_text))
-
-            // Files Tab is Active
             tabFiles.setBackgroundResource(R.drawable.bg_tab_selected_rounded)
             tabFiles.setTextColor(Color.WHITE)
-
             loadCourseFiles()
         }
     }
@@ -424,34 +380,23 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
     private fun setupSwipeToDelete() {
         val swipeHandler = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
             override fun onMove(r: RecyclerView, v: RecyclerView.ViewHolder, t: RecyclerView.ViewHolder) = false
-
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val position = viewHolder.adapterPosition
                 val fileToDelete = fileAdapter.getFileAt(position)
-
-                // 1. Inflate the custom dialog layout
                 val dialogView = layoutInflater.inflate(R.layout.dialog_reset_confirmation, null)
                 val dialog = AlertDialog.Builder(this@CourseActivity).setView(dialogView).create()
                 dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-
-                // 2. Bind the custom views
                 val tvTitle = dialogView.findViewById<TextView>(R.id.tv_title)
                 val tvMessage = dialogView.findViewById<TextView>(R.id.tv_message)
                 val btnCancel = dialogView.findViewById<Button>(R.id.btn_cancel)
                 val btnConfirm = dialogView.findViewById<Button>(R.id.btn_confirm)
-
-                // 3. Customize text for file deletion
                 tvTitle.text = "Delete File?"
                 tvMessage.text = "Are you sure you want to delete '${fileToDelete.name}'? This will remove the file for all shared users."
                 btnConfirm.text = "Delete"
-
-                // 4. Set Listeners
                 btnCancel.setOnClickListener {
                     dialog.dismiss()
-                    // IMPORTANT: Refresh the item so it swipes back into place if cancelled
                     fileAdapter.notifyItemChanged(position)
                 }
-
                 btnConfirm.setOnClickListener {
                     if (dbHelper.deleteFile(fileToDelete.id)) {
                         loadCourseFiles()
@@ -462,10 +407,7 @@ class CourseActivity : AppCompatActivity(), AddNewSubject.AddNewSubjectListener,
                         dialog.dismiss()
                     }
                 }
-
-                // Ensure the item swipes back if the dialog is dismissed via back button or outside click
                 dialog.setOnCancelListener { fileAdapter.notifyItemChanged(position) }
-
                 dialog.show()
             }
         }
